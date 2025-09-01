@@ -38,10 +38,11 @@ The app allows both patients and doctors to track progress and view therapy deta
    * Or run on an emulator
 
 ## Project Structure
+
 neuroflexapp/
 │-- src/
-│   │-- screens/        # App screens (Login, Dashboard, etc.)
-│   │-- components/     # Reusable components
+│   │-- screens/        
+│   │-- components/     
 │-- package.json
 │-- App.js
 
