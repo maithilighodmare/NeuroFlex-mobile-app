@@ -5,22 +5,21 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 
-// Import screens
+// Screens
 import DoctorDashboard from "./src/screens/Doctor/DoctorDashboard";
 import PatientDetails from "./src/screens/Doctor/PatientDetails";
 import DoctorProfile from "./src/screens/Doctor/DoctorProfile";
-// Placeholder screens
-function HomeScreen() {
-  return null;
-}
-function ProfileScreen() {
-  return null;
-}
+import PatientDashboard from "./src/screens/Patient/PatientDashboard";
+
+// New Screens
+import SplashScreen from "./src/screens/Onboarding/SplashScreen";
+import Login from "./src/screens/Auth/Login/Login";
+import Signup from "./src/screens/Auth/Signup/Signup";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Tabs for Doctor
+// Doctor Tabs
 function DoctorTabs() {
   return (
     <Tab.Navigator
@@ -37,9 +36,9 @@ function DoctorTabs() {
         tabBarInactiveTintColor: "gray",
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Home" component={DoctorDashboard} />
       <Tab.Screen name="Dashboard" component={DoctorDashboard} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={DoctorProfile} />
     </Tab.Navigator>
   );
 }
@@ -48,19 +47,43 @@ export default function App() {
   return (
     <NavigationContainer>
       <StatusBar style="auto" />
-      <Stack.Navigator>
-        {/* Tabs as main screen */}
+      <Stack.Navigator initialRouteName="Splash">
+        {/* Splash */}
+        <Stack.Screen
+          name="Splash"
+          component={SplashScreen}
+          options={{ headerShown: false }}
+        />
+
+        {/* Auth */}
+        <Stack.Screen
+          name="Login"
+          component={Login}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Signup"
+          component={Signup}
+          options={{ headerShown: false }}
+        />
+
+        {/* Doctor Flow */}
         <Stack.Screen
           name="Doctor"
           component={DoctorTabs}
           options={{ headerShown: false }}
         />
-
-        {/* Patient details screen */}
         <Stack.Screen
           name="PatientDetails"
           component={PatientDetails}
           options={{ title: "Patient Details" }}
+        />
+
+        {/* Patient Flow */}
+        <Stack.Screen
+          name="Patient"
+          component={PatientDashboard}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
