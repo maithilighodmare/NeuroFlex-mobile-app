@@ -5,11 +5,14 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 
+
 // Screens
 import DoctorDashboard from "./src/screens/Doctor/DoctorDashboard";
 import PatientDetails from "./src/screens/Doctor/PatientDetails";
 import DoctorProfile from "./src/screens/Doctor/DoctorProfile";
 import PatientDashboard from "./src/screens/Patient/PatientDashboard";
+import PatientProfile from "./src/screens/Patient/PatientProfile";
+
 
 // New Screens
 import SplashScreen from "./src/screens/Onboarding/SplashScreen";
@@ -90,6 +93,17 @@ export default function App() {
         <Stack.Screen
           name="Patient"
           component={PatientDashboard}
+          options={{ headerShown: false }}
+        />
+
+           <Stack.Screen
+          name="PatientDashboard"
+          component={PatientDashboard}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PatientProfile"
+          component={PatientProfile}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
