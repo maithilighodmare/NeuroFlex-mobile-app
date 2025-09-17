@@ -16,6 +16,8 @@ import PatientProfile from "./src/screens/Patient/PatientProfile";
 
 // New Screens
 import SplashScreen from "./src/screens/Onboarding/SplashScreen";
+import OnboardingScreen from "./src/screens/Onboarding/OnboardingScreen";
+
 import Login from "./src/screens/Auth/Login/Login";
 import Signup from "./src/screens/Auth/Signup/Signup";
 
@@ -57,7 +59,12 @@ export default function App() {
           component={SplashScreen}
           options={{ headerShown: false }}
         />
-
+        {/* Onboarding */}
+        <Stack.Screen
+          name="Onboarding"
+          component={OnboardingScreen}
+          options={{ headerShown: false }}
+        />
         {/* Auth */}
         <Stack.Screen
           name="Login"

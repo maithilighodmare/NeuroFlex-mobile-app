@@ -16,6 +16,15 @@ function HomeScreen() {
   );
 }
 
+// Dummy Settings Screen
+function SettingsScreen() {
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <Text>Settings Screen</Text>
+    </View>
+  );
+}
+
 const Tab = createBottomTabNavigator();
 
 export default function PatientBottomNav() {
@@ -23,8 +32,8 @@ export default function PatientBottomNav() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: "#2A4D9B", // active icon/text color
-        tabBarInactiveTintColor: "gray", // inactive icon/text color
+        tabBarActiveTintColor: "#2A4D9B", // active color
+        tabBarInactiveTintColor: "gray", // inactive color
         tabBarStyle: {
           backgroundColor: "white",
           borderTopWidth: 0.5,
@@ -38,6 +47,7 @@ export default function PatientBottomNav() {
           if (route.name === "Home") iconName = "home";
           else if (route.name === "Dashboard") iconName = "bar-chart";
           else if (route.name === "Profile") iconName = "person";
+          else if (route.name === "Settings") iconName = "settings";
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
@@ -45,6 +55,7 @@ export default function PatientBottomNav() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Dashboard" component={PatientDashboard} />
       <Tab.Screen name="Profile" component={PatientProfile} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
 }
