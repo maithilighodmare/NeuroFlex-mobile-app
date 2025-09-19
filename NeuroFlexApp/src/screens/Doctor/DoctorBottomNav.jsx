@@ -7,30 +7,11 @@ import { Ionicons } from "@expo/vector-icons";
 import DoctorDashboard from "../screens/Doctor/DoctorDashboard";
 import DoctorProfile from "../screens/Doctor/DoctorProfile";
 
-// Dummy Screens
-function HomeScreen() {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Home Screen</Text>
-    </View>
-  );
-}
 
-function DoctorProfile() {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Doctor Profile</Text>
-    </View>
-  );
-}
 
-function SettingsScreen() {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Settings Screen</Text>
-    </View>
-  );
-}
+
+
+
 
 const Tab = createBottomTabNavigator();
 

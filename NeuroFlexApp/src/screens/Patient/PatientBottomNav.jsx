@@ -7,23 +7,9 @@ import { Ionicons } from "@expo/vector-icons";
 import PatientDashboard from "../screens/Patient/PatientDashboard";
 import PatientProfile from "../screens/Patient/PatientProfile";
 
-// Dummy Home Screen
-function HomeScreen() {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Patient Home</Text>
-    </View>
-  );
-}
 
-// Dummy Settings Screen
-function SettingsScreen() {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Settings Screen</Text>
-    </View>
-  );
-}
+
+
 
 const Tab = createBottomTabNavigator();
 
@@ -55,7 +41,7 @@ export default function PatientBottomNav() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Dashboard" component={PatientDashboard} />
       <Tab.Screen name="Profile" component={PatientProfile} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      
     </Tab.Navigator>
   );
 }

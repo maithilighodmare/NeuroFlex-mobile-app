@@ -5,7 +5,6 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 
-
 // Screens
 import DoctorDashboard from "./src/screens/Doctor/DoctorDashboard";
 import PatientDetails from "./src/screens/Doctor/PatientDetails";
@@ -13,8 +12,6 @@ import DoctorProfile from "./src/screens/Doctor/DoctorProfile";
 import PatientDashboard from "./src/screens/Patient/PatientDashboard";
 import PatientProfile from "./src/screens/Patient/PatientProfile";
 
-
-// New Screens
 import SplashScreen from "./src/screens/Onboarding/SplashScreen";
 import OnboardingScreen from "./src/screens/Onboarding/OnboardingScreen";
 
@@ -24,7 +21,6 @@ import Signup from "./src/screens/Auth/Signup/Signup";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Doctor Tabs
 function DoctorTabs() {
   return (
     <Tab.Navigator
@@ -44,6 +40,29 @@ function DoctorTabs() {
       <Tab.Screen name="Home" component={DoctorDashboard} />
       <Tab.Screen name="Dashboard" component={DoctorDashboard} />
       <Tab.Screen name="Profile" component={DoctorProfile} />
+    </Tab.Navigator>
+  );
+}
+
+function PatientTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ color, size }) => {
+          let iconName;
+          if (route.name === "Home") iconName = "home-outline";
+          else if (route.name === "Dashboard") iconName = "bar-chart-outline";
+          else if (route.name === "Profile") iconName = "person-outline";
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: "#7B61FF",
+        tabBarInactiveTintColor: "gray",
+      })}
+    >
+      <Tab.Screen name="Home" component={PatientDashboard} />
+      <Tab.Screen name="Dashboard" component={PatientDashboard} />
+      <Tab.Screen name="Profile" component={PatientProfile} />
     </Tab.Navigator>
   );
 }
@@ -92,18 +111,7 @@ export default function App() {
         {/* Patient Flow */}
         <Stack.Screen
           name="Patient"
-          component={PatientDashboard}
-          options={{ headerShown: false }}
-        />
-
-           <Stack.Screen
-          name="PatientDashboard"
-          component={PatientDashboard}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="PatientProfile"
-          component={PatientProfile}
+          component={PatientTabs}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

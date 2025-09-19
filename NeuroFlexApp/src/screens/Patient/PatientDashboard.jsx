@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ProgressBar } from "react-native-paper";
 import { LineChart } from "react-native-chart-kit";
@@ -9,6 +15,37 @@ const screenWidth = Dimensions.get("window").width;
 
 export default function PatientDashboard() {
   const [filter, setFilter] = useState("Weekly");
+
+  // Dummy data for different filters
+  const chartData = {
+    Daily: {
+      labels: ["6 AM", "9 AM", "12 PM", "3 PM", "6 PM", "9 PM"],
+      datasets: [
+        { data: [500, 1200, 800, 1500, 1000, 700], color: () => "#2A4D9B" }, // Steps
+        { data: [50, 120, 80, 150, 100, 70], color: () => "#FF9900" }, // Calories
+      ],
+      legend: ["Steps", "Calories Burned"],
+    },
+    Weekly: {
+      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      datasets: [
+        {
+          data: [2000, 7500, 6000, 5000, 8000, 6500, 7000],
+          color: () => "#2A4D9B",
+        },
+        { data: [120, 300, 280, 260, 400, 350, 380], color: () => "#FF9900" },
+      ],
+      legend: ["Steps", "Calories Burned"],
+    },
+    Monthly: {
+      labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+      datasets: [
+        { data: [15000, 20000, 18000, 22000], color: () => "#2A4D9B" },
+        { data: [1200, 1500, 1400, 1600], color: () => "#FF9900" },
+      ],
+      legend: ["Steps", "Calories Burned"],
+    },
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -24,7 +61,11 @@ export default function PatientDashboard() {
         <Text style={styles.subText}>
           You’re 80% close to your weekly goal—keep pushing!
         </Text>
-        <ProgressBar progress={0.8} color="#2A4D9B" style={styles.progressBar} />
+        <ProgressBar
+          progress={0.8}
+          color="#2A4D9B"
+          style={styles.progressBar}
+        />
         <Text style={styles.progressLabel}>Overall Recovery Progress 80%</Text>
       </View>
 
@@ -57,7 +98,9 @@ export default function PatientDashboard() {
           <Ionicons name="calendar-outline" size={24} color="#2A4D9B" />
           <View style={styles.taskInfo}>
             <Text style={styles.taskTitle}>Neuroflex Mat Session</Text>
-            <Text style={styles.taskSubtitle}>Today, 2:00 PM - Physiotherapy</Text>
+            <Text style={styles.taskSubtitle}>
+              Today, 2:00 PM - Physiotherapy
+            </Text>
           </View>
           <Text style={styles.taskStatusDue}>Due Today</Text>
         </View>
@@ -66,7 +109,9 @@ export default function PatientDashboard() {
           <Ionicons name="clipboard-outline" size={24} color="#2A4D9B" />
           <View style={styles.taskInfo}>
             <Text style={styles.taskTitle}>Weekly Health Survey</Text>
-            <Text style={styles.taskSubtitle}>Complete by Friday - Data Entry</Text>
+            <Text style={styles.taskSubtitle}>
+              Complete by Friday - Data Entry
+            </Text>
           </View>
           <Text style={styles.taskStatusPending}>Pending</Text>
         </View>
@@ -112,14 +157,7 @@ export default function PatientDashboard() {
 
         {/* Line Chart */}
         <LineChart
-          data={{
-            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-            datasets: [
-              { data: [2000, 7500, 6000, 5000, 8000, 6500, 7000] },
-              { data: [120, 300, 280, 260, 400, 350, 380], color: () => "#2A4D9B" },
-            ],
-            legend: ["Steps", "Calories Burned"],
-          }}
+          data={chartData[filter]}
           width={screenWidth - 32}
           height={220}
           chartConfig={{
