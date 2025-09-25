@@ -3,297 +3,249 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
+  TouchableOpacity,
+  Dimensions,
+  Modal,
+  FlatList,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { ProgressBar } from "react-native-paper";
-import { LineChart } from "react-native-chart-kit";
-import { Dimensions } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { BarChart } from "react-native-chart-kit";
+import * as Progress from "react-native-progress";
 
-const screenWidth = Dimensions.get("window").width;
+const screenWidth = Dimensions.get("window").width - 40;
+
+const patient = {
+  name: "Dipak Mundhe",
+  id: "INFO01",
+  recovery: 78,
+  sessions: 24,
+  compliance: 92,
+  recentSessions: [
+    { id: 5, date: "Today", status: "Complete" },
+    { id: 4, date: "Yesterday", status: "Complete" },
+  ],
+};
+
+const chartData = {
+  Daily: {
+    Hand: [320, 310, 305, 300, 295, 290, 285],
+    Leg: [450, 440, 430, 420, 410, 400, 390],
+    Overall: [385, 375, 370, 360, 350, 345, 340],
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  },
+  Weekly: {
+    Hand: [310, 300, 290, 280],
+    Leg: [440, 420, 400, 380],
+    Overall: [375, 360, 345, 330],
+    labels: ["W1", "W2", "W3", "W4"],
+  },
+  Monthly: {
+    Hand: [300, 290, 280, 270],
+    Leg: [420, 410, 390, 370],
+    Overall: [365, 350, 335, 320],
+    labels: ["Jan", "Feb", "Mar", "Apr"],
+  },
+};
+
+const categories = ["Overall", "Hand", "Leg"];
 
 export default function PatientDashboard() {
   const [filter, setFilter] = useState("Weekly");
   const [category, setCategory] = useState("Overall");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Dummy data for different filters
-  const chartData = {
-    Daily: {
-      Hand: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        datasets: [{ data: [320, 310, 305, 300, 295, 290, 285] }],
-        legend: ["Reflex Time (Hand, ms)"],
-      },
-      Leg: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        datasets: [{ data: [450, 440, 430, 420, 410, 400, 390] }],
-        legend: ["Reflex Time (Leg, ms)"],
-      },
-      Overall: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        datasets: [{ data: [385, 375, 370, 360, 350, 345, 340] }],
-        legend: ["Reflex Time (Overall, ms)"],
-      },
-    },
-    Weekly: {
-      Hand: {
-        labels: ["W1", "W2", "W3", "W4"],
-        datasets: [{ data: [310, 300, 290, 280] }],
-        legend: ["Reflex Time (Hand, ms)"],
-      },
-      Leg: {
-        labels: ["W1", "W2", "W3", "W4"],
-        datasets: [{ data: [440, 420, 400, 380] }],
-        legend: ["Reflex Time (Leg, ms)"],
-      },
-      Overall: {
-        labels: ["W1", "W2", "W3", "W4"],
-        datasets: [{ data: [375, 360, 345, 330] }],
-        legend: ["Reflex Time (Overall, ms)"],
-      },
-    },
-    Monthly: {
-      Hand: {
-        labels: ["Jan", "Feb", "Mar", "Apr"],
-        datasets: [{ data: [300, 290, 280, 270] }],
-        legend: ["Reflex Time (Hand, ms)"],
-      },
-      Leg: {
-        labels: ["Jan", "Feb", "Mar", "Apr"],
-        datasets: [{ data: [420, 410, 390, 370] }],
-        legend: ["Reflex Time (Leg, ms)"],
-      },
-      Overall: {
-        labels: ["Jan", "Feb", "Mar", "Apr"],
-        datasets: [{ data: [365, 350, 335, 320] }],
-        legend: ["Reflex Time (Overall, ms)"],
-      },
-    },
-  };
+  const stats = [
+    { label: "Recovery", value: `${patient.recovery}%` },
+    { label: "Sessions", value: patient.sessions },
+    { label: "Compliance", value: `${patient.compliance}%` },
+  ];
 
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Patient Dashboard</Text>
-        <Ionicons name="notifications-outline" size={24} color="#2A4D9B" />
-      </View>
-      {/* Activity Progress */}
-      <View style={styles.section}>
-        <View style={styles.headerRow}>
-          <Text style={styles.sectionTitle}>Activity Progress</Text>
-          <View style={styles.dropdown}>
-            <Picker
-              selectedValue={category}
-              style={styles.picker}
-              onValueChange={(value) => setCategory(value)}
-            >
-              <Picker.Item label="Overall" value="Overall" />
-              <Picker.Item label="Hand" value="Hand" />
-              <Picker.Item label="Leg" value="Leg" />
-            </Picker>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.name}>{patient.name}</Text>
+            <Text style={styles.id}>Patient ID: {patient.id}</Text>
           </View>
+          <TouchableOpacity style={styles.closeButton}>
+            <Text style={styles.closeText}>X</Text>
+          </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Filter buttons */}
-        <View style={styles.filterRow}>
-          {["Daily", "Weekly", "Monthly"].map((item) => (
-            <TouchableOpacity
-              key={item}
-              onPress={() => setFilter(item)}
+      {/* Stats */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.statsScroll}
+      >
+        {stats.map((stat, index) => (
+          <View key={index} style={styles.statBox}>
+            <Text style={styles.statValue}>{stat.value}</Text>
+            <Text style={styles.statLabel}>{stat.label}</Text>
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* Filters + Category */}
+      <View style={styles.filterRow}>
+        {["Daily", "Weekly", "Monthly"].map((item) => (
+          <TouchableOpacity
+            key={item}
+            onPress={() => setFilter(item)}
+            style={[
+              styles.filterBtn,
+              filter === item && styles.filterBtnActive,
+            ]}
+          >
+            <Text
               style={[
-                styles.filterBtn,
-                filter === item && styles.filterBtnActive,
+                styles.filterText,
+                filter === item && styles.filterTextActive,
               ]}
             >
-              <Text
-                style={[
-                  styles.filterText,
-                  filter === item && styles.filterTextActive,
-                ]}
-              >
-                {item}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+              {item}
+            </Text>
+          </TouchableOpacity>
+        ))}
 
-        {/* Line Chart */}
-        <LineChart
-          data={chartData[filter][category]}
-          width={screenWidth - 32}
-          height={220}
-          chartConfig={{
-            backgroundColor: "#fff",
-            backgroundGradientFrom: "#fff",
-            backgroundGradientTo: "#fff",
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(42, 77, 155, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
-            propsForDots: {
-              r: "4",
-              strokeWidth: "2",
-              stroke: "#2A4D9B",
-            },
-          }}
-          bezier
-          style={styles.chart}
-        />
-      </View>
-      {/* Weekly Goal */}
-      <View style={styles.card}>
-        <Text style={styles.goalText}>Weekly Goal</Text>
-        <Text style={styles.subText}>
-          You’re 80% close to your weekly goal—keep pushing!
-        </Text>
-        <ProgressBar
-          progress={0.8}
-          color="#2A4D9B"
-          style={styles.progressBar}
-        />
-        <Text style={styles.progressLabel}>Overall Recovery Progress 80%</Text>
+        {/* Custom Category Dropdown */}
+        <TouchableOpacity
+          style={styles.dropdownBtn}
+          onPress={() => setDropdownOpen(true)}
+        >
+          <Text style={styles.dropdownText}>{category}</Text>
+        </TouchableOpacity>
+        <Modal transparent visible={dropdownOpen} animationType="fade">
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            onPress={() => setDropdownOpen(false)}
+          >
+            <View style={styles.modalContent}>
+              <FlatList
+                data={categories}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.modalItem}
+                    onPress={() => {
+                      setCategory(item);
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    <Text style={styles.modalText}>{item}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
 
-      {/* Types of Exercises */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Types of Exercises</Text>
-        <View style={styles.exerciseRow}>
-          <View style={styles.exerciseCard}>
-            <Ionicons name="heart-outline" size={28} color="#2A4D9B" />
-            <Text style={styles.exerciseTitle}>Balance</Text>
-            <Text style={styles.exerciseText}>
-              Improve stability and prevent falls.
-            </Text>
-          </View>
-          <View style={styles.exerciseCard}>
-            <Ionicons name="barbell-outline" size={28} color="#2A4D9B" />
-            <Text style={styles.exerciseTitle}>Strength</Text>
-            <Text style={styles.exerciseText}>
-              Build muscle and increase endurance.
-            </Text>
+      {/* Recovery Progress Graph */}
+      <Text style={styles.sectionTitle}>Recovery Progress</Text>
+      <BarChart
+        data={{
+          labels: chartData[filter].labels,
+          datasets: [{ data: chartData[filter][category] }],
+        }}
+        width={screenWidth}
+        height={220}
+        yAxisSuffix="ms"
+        chartConfig={{
+          backgroundGradientFrom: "#fff",
+          backgroundGradientTo: "#fff",
+          decimalPlaces: 0,
+          color: (opacity = 1) => `rgba(123, 97, 255, ${opacity})`,
+          labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+        }}
+        style={{ marginVertical: 8, borderRadius: 16 }}
+      />
+
+      {/* Overall Recovery Progress */}
+      <Text style={styles.sectionTitle}>Overall Recovery</Text>
+      <Progress.Bar
+        progress={patient.recovery / 100}
+        width={screenWidth}
+        height={15}
+        borderRadius={10}
+        color="#7B61FF"
+        unfilledColor="#E0E0E0"
+        borderWidth={0}
+        style={{ marginBottom: 20 }}
+      />
+
+      {/* Recent Sessions */}
+      <Text style={styles.sectionTitle}>Recent Sessions</Text>
+      {patient.recentSessions.map((session) => (
+        <View key={session.id} style={styles.sessionBox}>
+          <Text style={styles.sessionText}>
+            Session {session.id} - {session.date}
+          </Text>
+          <View
+            style={[
+              styles.statusBadge,
+              {
+                backgroundColor:
+                  session.status === "Complete" ? "#4CAF50" : "#FFC107",
+              },
+            ]}
+          >
+            <Text style={styles.statusText}>{session.status}</Text>
           </View>
         </View>
-      </View>
-
-      {/* Pending Tasks */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Pending Tasks</Text>
-
-        <View style={styles.taskCard}>
-          <Ionicons name="calendar-outline" size={24} color="#2A4D9B" />
-          <View style={styles.taskInfo}>
-            <Text style={styles.taskTitle}>Neuroflex Mat Session</Text>
-            <Text style={styles.taskSubtitle}>
-              Today, 2:00 PM - Physiotherapy
-            </Text>
-          </View>
-          <Text style={styles.taskStatusDue}>Due Today</Text>
-        </View>
-
-        <View style={styles.taskCard}>
-          <Ionicons name="clipboard-outline" size={24} color="#2A4D9B" />
-          <View style={styles.taskInfo}>
-            <Text style={styles.taskTitle}>Weekly Health Survey</Text>
-            <Text style={styles.taskSubtitle}>
-              Complete by Friday - Data Entry
-            </Text>
-          </View>
-          <Text style={styles.taskStatusPending}>Pending</Text>
-        </View>
-
-        <View style={styles.taskCard}>
-          <Ionicons name="chatbox-ellipses-outline" size={24} color="#2A4D9B" />
-          <View style={styles.taskInfo}>
-            <Text style={styles.taskTitle}>Doctor Feedback Review</Text>
-            <Text style={styles.taskSubtitle}>
-              Scheduled for tomorrow - Teleconsult
-            </Text>
-          </View>
-          <Text style={styles.taskStatusUpcoming}>Upcoming</Text>
-        </View>
-      </View>
+      ))}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8F9FF" },
+  container: { flex: 1, padding: 20, backgroundColor: "#f0f2ff" },
   header: {
+    backgroundColor: "#7B61FF",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    marginTop: 40,
+  },
+  headerContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
-    marginTop: 50,
   },
-  headerTitle: { fontSize: 20, fontWeight: "bold", color: "#2A4D9B" },
-
-  card: {
+  name: { color: "#fff", fontSize: 22, fontWeight: "bold" },
+  id: { color: "#fff", marginTop: 5, fontSize: 14 },
+  closeButton: { backgroundColor: "#5a45cc", borderRadius: 12, padding: 6 },
+  closeText: { color: "#fff", fontWeight: "bold" },
+  statsScroll: { marginBottom: 20 },
+  statBox: {
     backgroundColor: "#fff",
-    marginHorizontal: 16,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    elevation: 2,
-  },
-  goalText: { fontSize: 16, fontWeight: "bold", marginBottom: 6 },
-  subText: { fontSize: 14, color: "gray", marginBottom: 10 },
-  progressBar: { height: 10, borderRadius: 5 },
-  progressLabel: { fontSize: 12, color: "gray", marginTop: 6 },
-
-  section: { marginHorizontal: 16, marginBottom: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 12 },
-  dropdown: {
-    height: 40,
-    width: 130,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-  },
-
-  exerciseRow: { flexDirection: "row", justifyContent: "space-between" },
-  exerciseCard: {
-    flex: 1,
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 20,
+    alignItems: "center",
     marginRight: 10,
-    elevation: 2,
+    shadowColor: "#f0e9e9ff",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+    minWidth: 120,
   },
-  exerciseTitle: { fontSize: 16, fontWeight: "bold", marginTop: 8 },
-  exerciseText: { fontSize: 12, color: "gray", marginTop: 4 },
-
-  taskCard: {
+  statValue: { fontSize: 18, fontWeight: "bold", color: "#7B61FF" },
+  statLabel: { marginTop: 5, fontSize: 12, color: "#555" },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginVertical: 10,
+    color: "#333",
+  },
+  filterRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 14,
-    borderRadius: 12,
     marginBottom: 10,
-    elevation: 1,
+    flexWrap: "wrap",
   },
-  taskInfo: { flex: 1, marginLeft: 10 },
-  taskTitle: { fontSize: 15, fontWeight: "bold" },
-  taskSubtitle: { fontSize: 12, color: "gray" },
-
-  taskStatusDue: {
-    color: "#FF4C4C",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  taskStatusPending: {
-    color: "#FF9900",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  taskStatusUpcoming: {
-    color: "#2A4D9B",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-
-  filterRow: { flexDirection: "row", marginBottom: 10 },
   filterBtn: {
     paddingVertical: 6,
     paddingHorizontal: 16,
@@ -302,9 +254,53 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     marginRight: 10,
   },
-  filterBtnActive: { backgroundColor: "#2A4D9B", borderColor: "#2A4D9B" },
+  filterBtnActive: { backgroundColor: "#7B61FF", borderColor: "#7B61FF" },
   filterText: { color: "gray", fontSize: 14 },
   filterTextActive: { color: "#fff", fontWeight: "bold" },
-
-  chart: { borderRadius: 12, marginTop: 8 },
+  dropdownBtn: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginLeft: "auto",
+  },
+  dropdownText: { fontSize: 14, fontWeight: "bold", color: "#333" },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    width: 200,
+    paddingVertical: 10,
+  },
+  modalItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  modalText: { fontSize: 14, color: "#333" },
+  sessionBox: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 15,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  sessionText: { fontSize: 14 },
+  statusBadge: {
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  statusText: { color: "#fff", fontWeight: "bold" },
 });
