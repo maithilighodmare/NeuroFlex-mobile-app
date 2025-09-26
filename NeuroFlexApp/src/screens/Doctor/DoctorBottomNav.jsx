@@ -8,11 +8,6 @@ import DoctorDashboard from "../screens/Doctor/DoctorDashboard";
 import DoctorProfile from "../screens/Doctor/DoctorProfile";
 
 
-
-
-
-
-
 const Tab = createBottomTabNavigator();
 
 export default function BottomNav() {
@@ -27,7 +22,6 @@ export default function BottomNav() {
           if (route.name === "Home") iconName = "home";
           else if (route.name === "Dashboard") iconName = "bar-chart";
           else if (route.name === "Profile") iconName = "person";
-          else if (route.name === "Settings") iconName = "settings";
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
@@ -35,7 +29,7 @@ export default function BottomNav() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Dashboard" component={DoctorDashboard} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+
     </Tab.Navigator>
   );
 }
