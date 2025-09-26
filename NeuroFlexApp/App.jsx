@@ -11,7 +11,7 @@ import PatientDetails from "./src/screens/Doctor/PatientDetails";
 import DoctorProfile from "./src/screens/Doctor/DoctorProfile";
 import PatientDashboard from "./src/screens/Patient/PatientDashboard";
 import PatientProfile from "./src/screens/Patient/PatientProfile";
-
+import HomeScreen from "./src/screens/Patient/HomeScreen";
 import SplashScreen from "./src/screens/Onboarding/SplashScreen";
 import OnboardingScreen from "./src/screens/Onboarding/OnboardingScreen";
 
@@ -60,7 +60,7 @@ function PatientTabs() {
         tabBarInactiveTintColor: "gray",
       })}
     >
-      <Tab.Screen name="Home" component={PatientDashboard} />
+      <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Dashboard" component={PatientDashboard} />
       <Tab.Screen name="Profile" component={PatientProfile} />
     </Tab.Navigator>

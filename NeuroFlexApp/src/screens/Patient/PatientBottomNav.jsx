@@ -1,39 +1,27 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-// Import your patient screens
-import PatientDashboard from "../screens/Patient/PatientDashboard";
-import PatientProfile from "../screens/Patient/PatientProfile";
-
-
-
-
+import HomeScreen from "./HomeScreen";
+import PatientDashboard from "./PatientDashboard";
+import PatientProfile from "./PatientProfile";
 
 const Tab = createBottomTabNavigator();
 
 export default function PatientBottomNav() {
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: "#2A4D9B", // active color
-        tabBarInactiveTintColor: "gray", // inactive color
-        tabBarStyle: {
-          backgroundColor: "white",
-          borderTopWidth: 0.5,
-          borderTopColor: "#ccc",
-          height: 60,
-          paddingBottom: 5,
-          paddingTop: 5,
-        },
+        tabBarActiveTintColor: "#2A4D9B",
+        tabBarInactiveTintColor: "gray",
+        tabBarStyle: { height: 60, paddingTop: 5, paddingBottom: 5 },
         tabBarIcon: ({ color, size }) => {
           let iconName;
           if (route.name === "Home") iconName = "home";
           else if (route.name === "Dashboard") iconName = "bar-chart";
           else if (route.name === "Profile") iconName = "person";
-          else if (route.name === "Settings") iconName = "settings";
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
@@ -41,7 +29,6 @@ export default function PatientBottomNav() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Dashboard" component={PatientDashboard} />
       <Tab.Screen name="Profile" component={PatientProfile} />
-      
     </Tab.Navigator>
   );
 }
