@@ -52,10 +52,14 @@ export default function DoctorDashboard() {
           <Text style={styles.title}>Neuroflex Mat</Text>
           <Text style={styles.subtitle}>Doctor Dashboard</Text>
         </View>
-        <View style={styles.doctorCircle}>
-          <Text style={styles.doctorInitials}>DM</Text>
-          <Text style={styles.doctorName}>Dr. Maithili</Text>
-        </View>
+       <TouchableOpacity
+  style={styles.doctorCircle}
+  onPress={() => navigation.navigate("Profile")}
+>
+  <Text style={styles.doctorInitials}>DM</Text>
+  <Text style={styles.doctorName}>Dr. Maithili</Text>
+</TouchableOpacity>
+
       </View>
 
       {/* Stats Row */}
