@@ -14,9 +14,14 @@ export default function PatientBottomNav() {
       initialRouteName="Home"
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: "#2A4D9B",
-        tabBarInactiveTintColor: "gray",
-        tabBarStyle: { height: 60, paddingTop: 5, paddingBottom: 5 },
+        tabBarActiveTintColor: "#28AFB0", // primary blue
+        tabBarInactiveTintColor: "#293132", // dark color
+        tabBarStyle: {
+          height: 60,
+          paddingTop: 5,
+          paddingBottom: 5,
+          backgroundColor: "#FFFDFD", // white background
+        },
         tabBarIcon: ({ color, size }) => {
           let iconName;
           if (route.name === "Home") iconName = "home";

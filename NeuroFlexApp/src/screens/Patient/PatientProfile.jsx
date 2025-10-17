@@ -161,28 +161,28 @@ export default function PatientProfile() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F4F6FA" },
+  safeArea: { flex: 1, backgroundColor: "#FFFDFD" },
   scrollContent: { padding: 20, paddingBottom: 100 },
 
   header: {
     alignItems: "center",
-    backgroundColor: "#8757e0fb", 
+    backgroundColor: "#28AFB0",
     borderRadius: 25,
     paddingTop: 40,
-    marginTop: 30, 
+    marginTop: 30,
     paddingBottom: 40,
     marginBottom: 20,
-    shadowColor: "#8757e0fb",
+    shadowColor: "#28AFB0",
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 5,
   },
   avatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 15 },
-  name: { fontSize: 22, fontWeight: "bold", color: "#fff" },
-  condition: { fontSize: 16, color: "#D9E3FF", marginTop: 5 },
+  name: { fontSize: 22, fontWeight: "bold", color: "#FFFDFD" },
+  condition: { fontSize: 16, color: "#FFFDFD", marginTop: 5 },
 
   infoCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFDFD",
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  infoText: { fontSize: 14, marginBottom: 8, color: "#333" },
+  infoText: { fontSize: 14, marginBottom: 8, color: "#293132" },
 
   statsRow: {
     flexDirection: "row",
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   statBox: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFDFD",
     padding: 20,
     borderRadius: 16,
     alignItems: "center",
@@ -210,18 +210,18 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  statValue: { fontSize: 20, fontWeight: "bold", color: "#2A4D9B" },
-  statLabel: { marginTop: 5, fontSize: 12, color: "#555" },
+  statValue: { fontSize: 20, fontWeight: "bold", color: "#28AFB0" },
+  statLabel: { marginTop: 5, fontSize: 12, color: "#293132" },
 
   button: {
-    backgroundColor: "#8757e0fb", 
+    backgroundColor: "#28AFB0",
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 20,
     alignItems: "center",
     marginTop: 10,
   },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  buttonText: { color: "#FFFDFD", fontSize: 16, fontWeight: "bold" },
 
   modalOverlay: {
     flex: 1,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFDFD",
     borderRadius: 16,
     padding: 20,
   },
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 15,
-    color: "#2A4D9B",
+    color: "#28AFB0",
     textAlign: "center",
   },
   input: {
@@ -247,6 +247,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     marginBottom: 12,
+    color: "#293132",
   },
   modalButtons: {
     flexDirection: "row",

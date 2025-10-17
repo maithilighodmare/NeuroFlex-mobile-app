@@ -40,9 +40,8 @@ export default function App() {
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f3f4f6" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fffdfd" }}>
       <ScrollView style={styles.container}>
-
         {/* HERO */}
         <View style={styles.hero}>
           <Text style={styles.heroTitle}>Expert Physiotherapy Care</Text>
@@ -74,7 +73,7 @@ export default function App() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.largeBtn, { backgroundColor: "#f06dd3ff" }]}
+              style={[styles.largeBtn, { backgroundColor: "#293132" }]}
               onPress={() => alert("FAQ clicked!")}
             >
               <Text style={styles.largeBtnText}>FAQ</Text>
@@ -83,7 +82,7 @@ export default function App() {
         </View>
 
         {/* WHY CHOOSE US */}
-        <View style={[styles.section, { backgroundColor: "#eef2ff" }]}>
+        <View style={[styles.section, { backgroundColor: "#e9f9f9" }]}>
           <Text style={styles.sectionTitle}>Why Choose NeuroFlex?</Text>
           <ScrollView
             horizontal
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
     paddingHorizontal: 20,
     marginBottom: 10,
-    backgroundColor: "#6728f8cc",
+    backgroundColor: "#28afb0",
     alignItems: "center",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
@@ -119,14 +118,14 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "white",
+    color: "#fffdfd",
     marginTop: 15,
     marginBottom: 20,
     textAlign: "center",
   },
   heroSubtitle: {
     fontSize: 15,
-    color: "white",
+    color: "#fffdfd",
     textAlign: "center",
     lineHeight: 22,
   },
@@ -138,6 +137,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 16,
+    color: "#293132",
   },
 
   /* SERVICES */
@@ -147,10 +147,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   card: {
-    backgroundColor: "white",
-    padding: 8, // smaller insights
+    backgroundColor: "#fffdfd",
+    padding: 8,
     borderRadius: 10,
-    width: "44%", // slightly smaller
+    width: "44%",
     marginBottom: 12,
     alignItems: "center",
     shadowColor: "#000",
@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 2,
+    color: "#293132",
   },
   cardText: { fontSize: 11, color: "#6b7280", textAlign: "center" },
 
@@ -175,13 +176,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   largeBtn: {
-    backgroundColor: "#f06dd3ff",
+    backgroundColor: "#28afb0",
     paddingVertical: 12,
     paddingHorizontal: 22,
     borderRadius: 8,
   },
   largeBtnText: {
-    color: "white",
+    color: "#fffdfd",
     fontWeight: "bold",
     fontSize: 14,
   },
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
   /* WHY CHOOSE */
   whyContainer: { paddingVertical: 10 },
   whyCard: {
-    backgroundColor: "white",
+    backgroundColor: "#fffdfd",
     borderRadius: 12,
     padding: 18,
     marginRight: 14,
@@ -203,8 +204,8 @@ const styles = StyleSheet.create({
   whyNumber: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#f06dd3ff",
+    color: "#28afb0",
     marginBottom: 4,
   },
-  whyText: { fontSize: 12, textAlign: "center", color: "#374151" },
+  whyText: { fontSize: 12, textAlign: "center", color: "#293132" },
 });

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { BarChart } from "react-native-chart-kit";
 import * as Progress from "react-native-progress";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const screenWidth = Dimensions.get("window").width - 40;
 
@@ -20,10 +21,6 @@ const patient = {
   recovery: 78,
   sessions: 24,
   compliance: 92,
-  recentSessions: [
-    { id: 5, date: "Today", status: "Complete" },
-    { id: 4, date: "Yesterday", status: "Complete" },
-  ],
 };
 
 const chartData = {
@@ -55,9 +52,24 @@ export default function PatientDashboard() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const stats = [
-    { label: "Recovery", value: `${patient.recovery}%` },
-    { label: "Sessions", value: patient.sessions },
-    { label: "Compliance", value: `${patient.compliance}%` },
+    {
+      label: "Recovery",
+      value: `${patient.recovery}%`,
+      icon: "heart-pulse",
+      colors: ["#28AFB0", "#28AFB0"],
+    },
+    {
+      label: "Sessions",
+      value: patient.sessions,
+      icon: "calendar-check",
+      colors: ["#28AFB0", "#28AFB0"],
+    },
+    {
+      label: "Compliance",
+      value: `${patient.compliance}%`,
+      icon: "check-circle",
+      colors: ["#28AFB0", "#28AFB0"],
+    },
   ];
 
   return (
@@ -69,25 +81,38 @@ export default function PatientDashboard() {
             <Text style={styles.name}>{patient.name}</Text>
             <Text style={styles.id}>Patient ID: {patient.id}</Text>
           </View>
-          <TouchableOpacity style={styles.closeButton}>
-            <Text style={styles.closeText}>X</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Stats */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.statsScroll}
-      >
+      {/* Stats Section */}
+      <View style={styles.statsContainer}>
         {stats.map((stat, index) => (
-          <View key={index} style={styles.statBox}>
-            <Text style={styles.statValue}>{stat.value}</Text>
+          <View
+            key={index}
+            style={[
+              styles.statCard,
+              { backgroundColor: stat.colors[1] + "20" }, // translucent
+            ]}
+          >
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: stat.colors[0] + "33" },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name={stat.icon}
+                size={28}
+                color={stat.colors[1]}
+              />
+            </View>
+            <Text style={[styles.statValue, { color: stat.colors[1] }]}>
+              {stat.value}
+            </Text>
             <Text style={styles.statLabel}>{stat.label}</Text>
           </View>
         ))}
-      </ScrollView>
+      </View>
 
       {/* Filters + Category */}
       <View style={styles.filterRow}>
@@ -155,13 +180,14 @@ export default function PatientDashboard() {
         height={220}
         yAxisSuffix="ms"
         chartConfig={{
-          backgroundGradientFrom: "#fff",
-          backgroundGradientTo: "#fff",
+          backgroundGradientFrom: "#FFFDFD",
+          backgroundGradientTo: "#FFFDFD",
           decimalPlaces: 0,
-          color: (opacity = 1) => `rgba(123, 97, 255, ${opacity})`,
-          labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+          color: (opacity = 1) => `rgba(40, 175, 176, ${opacity})`,
+          labelColor: (opacity = 1) => `rgba(41, 49, 50, ${opacity})`,
+          barPercentage: 0.6,
         }}
-        style={{ marginVertical: 8, borderRadius: 16 }}
+        style={styles.chart}
       />
 
       {/* Overall Recovery Progress */}
@@ -171,75 +197,74 @@ export default function PatientDashboard() {
         width={screenWidth}
         height={15}
         borderRadius={10}
-        color="#7B61FF"
+        color="#28AFB0"
         unfilledColor="#E0E0E0"
         borderWidth={0}
-        style={{ marginBottom: 20 }}
+        style={{ marginBottom: 30 }}
       />
-
-      {/* Recent Sessions */}
-      <Text style={styles.sectionTitle}>Recent Sessions</Text>
-      {patient.recentSessions.map((session) => (
-        <View key={session.id} style={styles.sessionBox}>
-          <Text style={styles.sessionText}>
-            Session {session.id} - {session.date}
-          </Text>
-          <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor:
-                  session.status === "Complete" ? "#4CAF50" : "#FFC107",
-              },
-            ]}
-          >
-            <Text style={styles.statusText}>{session.status}</Text>
-          </View>
-        </View>
-      ))}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#f0f2ff" },
+  container: { flex: 1, padding: 20, backgroundColor: "#FFFDFD" },
+
   header: {
-    backgroundColor: "#7B61FF",
+    backgroundColor: "#28AFB0",
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
     marginTop: 40,
+    elevation: 3,
   },
   headerContent: {
     flexDirection: "row",
+    alignItems: "center",
+  },
+  name: { color: "#FFFDFD", fontSize: 24, fontWeight: "700" },
+  id: { color: "#FFFDFD", marginTop: 6, fontSize: 14, fontWeight: "500" },
+
+  statsContainer: {
+    flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    marginBottom: 25,
   },
-  name: { color: "#fff", fontSize: 22, fontWeight: "bold" },
-  id: { color: "#fff", marginTop: 5, fontSize: 14 },
-  closeButton: { backgroundColor: "#5a45cc", borderRadius: 12, padding: 6 },
-  closeText: { color: "#fff", fontWeight: "bold" },
-  statsScroll: { marginBottom: 20 },
-  statBox: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 20,
+  statCard: {
+    flex: 1,
+    borderRadius: 16,
     alignItems: "center",
-    marginRight: 10,
-    shadowColor: "#f0e9e9ff",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-    minWidth: 120,
+    paddingVertical: 20,
+    marginHorizontal: 5,
+    backgroundColor: "#FFFDFD",
+    shadowColor: "#000",
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  statValue: { fontSize: 18, fontWeight: "bold", color: "#7B61FF" },
-  statLabel: { marginTop: 5, fontSize: 12, color: "#555" },
+  iconContainer: {
+    padding: 10,
+    borderRadius: 50,
+    marginBottom: 10,
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 13,
+    color: "#293132",
+    fontWeight: "500",
+  },
+
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginVertical: 10,
-    color: "#333",
+    fontSize: 17,
+    fontWeight: "600",
+    marginVertical: 12,
+    color: "#293132",
   },
+  chart: { marginVertical: 8, borderRadius: 16, elevation: 2 },
+
   filterRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -254,11 +279,15 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     marginRight: 10,
   },
-  filterBtnActive: { backgroundColor: "#7B61FF", borderColor: "#7B61FF" },
-  filterText: { color: "gray", fontSize: 14 },
-  filterTextActive: { color: "#fff", fontWeight: "bold" },
+  filterBtnActive: {
+    backgroundColor: "#28AFB0",
+    borderColor: "#28AFB0",
+  },
+  filterText: { color: "#293132", fontSize: 14 },
+  filterTextActive: { color: "#FFFDFD", fontWeight: "bold" },
+
   dropdownBtn: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFDFD",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 6,
@@ -266,7 +295,8 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     marginLeft: "auto",
   },
-  dropdownText: { fontSize: 14, fontWeight: "bold", color: "#333" },
+  dropdownText: { fontSize: 14, fontWeight: "bold", color: "#293132" },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.3)",
@@ -274,33 +304,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFDFD",
     borderRadius: 12,
     width: 200,
     paddingVertical: 10,
   },
-  modalItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  modalText: { fontSize: 14, color: "#333" },
-  sessionBox: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 15,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  sessionText: { fontSize: 14 },
-  statusBadge: {
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  statusText: { color: "#fff", fontWeight: "bold" },
+  modalItem: { paddingVertical: 10, paddingHorizontal: 20 },
+  modalText: { fontSize: 14, color: "#293132" },
 });
