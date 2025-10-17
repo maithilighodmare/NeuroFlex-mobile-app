@@ -10,17 +10,15 @@ import {
   Modal,
   TextInput,
 } from "react-native";
+import { Feather as Icon } from "@expo/vector-icons";
 
 const patientData = {
-  name: "John Doe",
-  age: 30,
-  email: "john@example.com",
-  phone: "+91 98765 43210",
-  address: "123, Green Street, Nagpur",
-  condition: "Post-Stroke Rehab",
-  sessionsCompleted: 12,
-  ongoingSessions: 3,
-  recoveryRate: "70%",
+  name: "Aashvi Tekade",
+  role: "Buyer",
+  username: "albertflorest_",
+  gender: "Male",
+  phone: "+44 1632 960860",
+  email: "albertflorest@email.com",
   image: "https://cdn-icons-png.flaticon.com/512/147/147144.png",
 };
 
@@ -35,46 +33,76 @@ export default function PatientProfile() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header Section */}
-        <View style={styles.header}>
-          <Image source={{ uri: patient.image }} style={styles.avatar} />
+        {/* Profile Header */}
+        <View style={styles.headerContainer}>
+          <View style={styles.imageContainer}>
+            <Image source={{ uri: patient.image }} style={styles.avatar} />
+            <TouchableOpacity style={styles.editIcon}>
+              <Icon name="camera" size={16} color="#fff" />
+            </TouchableOpacity>
+          </View>
           <Text style={styles.name}>{patient.name}</Text>
-          <Text style={styles.condition}>{patient.condition}</Text>
+          <Text style={styles.role}>{patient.role}</Text>
         </View>
 
-        {/* Info Section */}
-        <View style={styles.infoCard}>
-          <Text style={styles.infoText}>📧 {patient.email}</Text>
-          <Text style={styles.infoText}>📞 {patient.phone}</Text>
-          <Text style={styles.infoText}>🏠 {patient.address}</Text>
-          <Text style={styles.infoText}>🎂 Age: {patient.age}</Text>
+        {/* Menu List */}
+        <View style={styles.menuContainer}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => setModalVisible(true)}
+          >
+            <View style={styles.menuLeft}>
+              <View style={styles.iconWrapper}>
+                <Icon name="user" size={20} color="#fff" />
+              </View>
+              <Text style={styles.menuText}>Edit Profile</Text>
+            </View>
+            <Icon name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <View style={styles.iconWrapper}>
+                <Icon name="bell" size={20} color="#fff" />
+              </View>
+              <Text style={styles.menuText}>Notification</Text>
+            </View>
+            <Icon name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <View style={styles.iconWrapper}>
+                <Icon name="map-pin" size={20} color="#fff" />
+              </View>
+              <Text style={styles.menuText}>Address</Text>
+            </View>
+            <Icon name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <View style={styles.iconWrapper}>
+                <Icon name="lock" size={20} color="#fff" />
+              </View>
+              <Text style={styles.menuText}>Change Password</Text>
+            </View>
+            <Icon name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
         </View>
 
-        {/* Stats Section */}
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{patient.sessionsCompleted}</Text>
-            <Text style={styles.statLabel}>Sessions Done</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{patient.ongoingSessions}</Text>
-            <Text style={styles.statLabel}>Ongoing</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{patient.recoveryRate}</Text>
-            <Text style={styles.statLabel}>Recovery</Text>
-          </View>
-        </View>
-
-        {/* Edit Profile Button */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setModalVisible(true)}
-        >
-          <Text style={styles.buttonText}>Edit Profile</Text>
+        {/* Sign Out Button */}
+        <TouchableOpacity style={styles.signOutButton}>
+          <Icon
+            name="log-out"
+            size={18}
+            color="#fff"
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
 
-        {/* Edit Modal */}
+        {/* Edit Profile Modal */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -83,9 +111,15 @@ export default function PatientProfile() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={styles.backButton}
+              >
+                <Icon name="chevron-left" size={28} color="#28AFB0" />
+              </TouchableOpacity>
+
               <Text style={styles.modalTitle}>Edit Profile</Text>
 
-              {/* Editable Fields */}
               <TextInput
                 style={styles.input}
                 value={patient.name}
@@ -94,64 +128,36 @@ export default function PatientProfile() {
               />
               <TextInput
                 style={styles.input}
-                value={patient.condition}
+                value={patient.username}
                 onChangeText={(text) =>
-                  setPatient({ ...patient, condition: text })
+                  setPatient({ ...patient, username: text })
                 }
-                placeholder="Condition"
+                placeholder="Username"
               />
               <TextInput
                 style={styles.input}
-                value={patient.email}
+                value={patient.gender}
                 onChangeText={(text) =>
-                  setPatient({ ...patient, email: text })
+                  setPatient({ ...patient, gender: text })
                 }
-                placeholder="Email"
+                placeholder="Gender"
               />
               <TextInput
                 style={styles.input}
                 value={patient.phone}
-                onChangeText={(text) =>
-                  setPatient({ ...patient, phone: text })
-                }
-                placeholder="Phone"
+                onChangeText={(text) => setPatient({ ...patient, phone: text })}
+                placeholder="Phone Number"
               />
               <TextInput
                 style={styles.input}
-                value={patient.address}
-                onChangeText={(text) =>
-                  setPatient({ ...patient, address: text })
-                }
-                placeholder="Address"
-              />
-              <TextInput
-                style={styles.input}
-                value={String(patient.age)}
-                onChangeText={(text) =>
-                  setPatient({ ...patient, age: text })
-                }
-                placeholder="Age"
-                keyboardType="numeric"
+                value={patient.email}
+                onChangeText={(text) => setPatient({ ...patient, email: text })}
+                placeholder="Email"
               />
 
-              {/* Buttons */}
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.button, { flex: 1, marginRight: 5 }]}
-                  onPress={handleSave}
-                >
-                  <Text style={styles.buttonText}>Save</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.button,
-                    { flex: 1, backgroundColor: "#999", marginLeft: 5 },
-                  ]}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.buttonText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <Text style={styles.saveText}>Save</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>
@@ -161,96 +167,142 @@ export default function PatientProfile() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#FFFDFD" },
-  scrollContent: { padding: 20, paddingBottom: 100 },
-
-  header: {
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F5F6FA",
+    marginTop: 5,
+  },
+  scrollContent: {
     alignItems: "center",
+    paddingVertical: 30,
+  },
+  headerContainer: {
+    alignItems: "center",
+    marginBottom: 25,
+    marginTop: 80,
+  },
+  imageContainer: {
+    position: "relative",
+  },
+  avatar: {
+    width: 210,
+    height: 210,
+    borderRadius: 55,
+  },
+  editIcon: {
+    position: "absolute",
+    bottom: 5,
+    right: 5,
+    backgroundColor: "#28AFB0",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  name: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginTop: 12,
+    color: "#000",
+  },
+  role: {
+    fontSize: 14,
+    color: "#777",
+    marginTop: 4,
+  },
+
+  menuContainer: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    paddingVertical: 10,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderColor: "#eee",
+  },
+  menuLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconWrapper: {
     backgroundColor: "#28AFB0",
     borderRadius: 25,
-    paddingTop: 40,
-    marginTop: 30,
-    paddingBottom: 40,
-    marginBottom: 20,
-    shadowColor: "#28AFB0",
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  avatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 15 },
-  name: { fontSize: 22, fontWeight: "bold", color: "#FFFDFD" },
-  condition: { fontSize: 16, color: "#FFFDFD", marginTop: 5 },
-
-  infoCard: {
-    backgroundColor: "#FFFDFD",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  infoText: { fontSize: 14, marginBottom: 8, color: "#293132" },
-
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  statBox: {
-    backgroundColor: "#FFFDFD",
-    padding: 20,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
     alignItems: "center",
-    flex: 1,
-    marginHorizontal: 5,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    justifyContent: "center",
+    marginRight: 15,
   },
-  statValue: { fontSize: 20, fontWeight: "bold", color: "#28AFB0" },
-  statLabel: { marginTop: 5, fontSize: 12, color: "#293132" },
+  menuText: {
+    fontSize: 16,
+    color: "#333",
+  },
 
-  button: {
+  signOutButton: {
+    flexDirection: "row",
     backgroundColor: "#28AFB0",
     borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    width: "90%",
+    paddingVertical: 14,
     alignItems: "center",
-    marginTop: 10,
+    justifyContent: "center",
+    marginTop: 30,
   },
-  buttonText: { color: "#FFFDFD", fontSize: 16, fontWeight: "bold" },
+  signOutText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
-    paddingHorizontal: 20,
   },
   modalContent: {
-    backgroundColor: "#FFFDFD",
+    backgroundColor: "#fff",
+    margin: 20,
     borderRadius: 16,
-    padding: 20,
+    padding: 25,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 15,
     color: "#28AFB0",
     textAlign: "center",
+    marginBottom: 20,
+  },
+  backButton: {
+    position: "absolute",
+    left: 10,
+    top: 15,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#ddd",
     borderRadius: 10,
-    padding: 10,
+    padding: 12,
     marginBottom: 12,
-    color: "#293132",
   },
-  modalButtons: {
-    flexDirection: "row",
-    marginTop: 10,
+  saveButton: {
+    backgroundColor: "#28AFB0",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 15,
+  },
+  saveText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
