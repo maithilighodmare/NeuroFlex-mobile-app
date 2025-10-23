@@ -10,74 +10,99 @@ import {
   Modal,
   TextInput,
 } from "react-native";
+import { Feather as Icon } from "@expo/vector-icons";
 
-const doctorData = {
-  name: "Dr. Maithili",
-  specialization: "Neurological Physiotherapist",
-  email: "maithili@neurocarehospital.com",
-  phone: "+91 98765 12345",
-  hospital: "NeuroCare Hospital",
-  experience: "8 Years",
-  patients: 245,
-  ongoing: 12,
-  successRate: "97%",
-  image: "https://cdn-icons-png.flaticon.com/512/387/387561.png",
+const patientData = {
+  name: "Aashvi Tekade",
+  role: "Buyer",
+  username: "albertflorest_",
+  gender: "Male",
+  phone: "+44 1632 960860",
+  email: "albertflorest@email.com",
+  image: "https://cdn-icons-png.flaticon.com/512/147/147144.png",
 };
 
-export default function DoctorProfile() {
-  const [doctor, setDoctor] = useState(doctorData);
+export default function PatientProfile() {
+  const [patient, setPatient] = useState(patientData);
   const [modalVisible, setModalVisible] = useState(false);
 
   const handleSave = () => {
-    // You can add API integration here to save changes
     setModalVisible(false);
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View style={styles.headerInner}>
-            <Image source={{ uri: doctor.image }} style={styles.avatar} />
-            <Text style={styles.name}>{doctor.name}</Text>
-            <Text style={styles.specialization}>{doctor.specialization}</Text>
+        {/* Profile Header */}
+        <View style={styles.headerContainer}>
+          <View style={styles.imageContainer}>
+            <Image source={{ uri: patient.image }} style={styles.avatar} />
+            <TouchableOpacity style={styles.editIcon}>
+              <Icon name="camera" size={16} color="#fff" />
+            </TouchableOpacity>
           </View>
+          <Text style={styles.name}>{patient.name}</Text>
+          <Text style={styles.role}>{patient.role}</Text>
         </View>
 
-        {/* Info Section */}
-        <View style={styles.infoCard}>
-          <Text style={styles.infoText}>📧 {doctor.email}</Text>
-          <Text style={styles.infoText}>📞 {doctor.phone}</Text>
-          <Text style={styles.infoText}>🏥 {doctor.hospital}</Text>
-          <Text style={styles.infoText}>⏳ Experience: {doctor.experience}</Text>
+        {/* Menu List */}
+        <View style={styles.menuContainer}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => setModalVisible(true)}
+          >
+            <View style={styles.menuLeft}>
+              <View style={styles.iconWrapper}>
+                <Icon name="user" size={20} color="#fff" />
+              </View>
+              <Text style={styles.menuText}>Edit Profile</Text>
+            </View>
+            <Icon name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <View style={styles.iconWrapper}>
+                <Icon name="bell" size={20} color="#fff" />
+              </View>
+              <Text style={styles.menuText}>Notification</Text>
+            </View>
+            <Icon name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <View style={styles.iconWrapper}>
+                <Icon name="map-pin" size={20} color="#fff" />
+              </View>
+              <Text style={styles.menuText}>Address</Text>
+            </View>
+            <Icon name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <View style={styles.iconWrapper}>
+                <Icon name="lock" size={20} color="#fff" />
+              </View>
+              <Text style={styles.menuText}>Change Password</Text>
+            </View>
+            <Icon name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
         </View>
 
-        {/* Stats Section */}
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{doctor.patients}</Text>
-            <Text style={styles.statLabel}>Patients</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{doctor.ongoing}</Text>
-            <Text style={styles.statLabel}>Ongoing Cases</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{doctor.successRate}</Text>
-            <Text style={styles.statLabel}>Success Rate</Text>
-          </View>
-        </View>
-
-        {/* Edit Profile Button */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setModalVisible(true)}
-        >
-          <Text style={styles.buttonText}>Edit Profile</Text>
+        {/* Sign Out Button */}
+        <TouchableOpacity style={styles.signOutButton}>
+          <Icon
+            name="log-out"
+            size={18}
+            color="#fff"
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
 
-        {/* Edit Modal */}
+        {/* Edit Profile Modal */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -86,76 +111,53 @@ export default function DoctorProfile() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={styles.backButton}
+              >
+                <Icon name="chevron-left" size={28} color="#28AFB0" />
+              </TouchableOpacity>
+
               <Text style={styles.modalTitle}>Edit Profile</Text>
 
-              {/* Editable Fields */}
               <TextInput
                 style={styles.input}
-                value={doctor.name}
-                onChangeText={(text) =>
-                  setDoctor({ ...doctor, name: text })
-                }
+                value={patient.name}
+                onChangeText={(text) => setPatient({ ...patient, name: text })}
                 placeholder="Name"
               />
               <TextInput
                 style={styles.input}
-                value={doctor.specialization}
+                value={patient.username}
                 onChangeText={(text) =>
-                  setDoctor({ ...doctor, specialization: text })
+                  setPatient({ ...patient, username: text })
                 }
-                placeholder="Specialization"
+                placeholder="Username"
               />
               <TextInput
                 style={styles.input}
-                value={doctor.email}
+                value={patient.gender}
                 onChangeText={(text) =>
-                  setDoctor({ ...doctor, email: text })
+                  setPatient({ ...patient, gender: text })
                 }
+                placeholder="Gender"
+              />
+              <TextInput
+                style={styles.input}
+                value={patient.phone}
+                onChangeText={(text) => setPatient({ ...patient, phone: text })}
+                placeholder="Phone Number"
+              />
+              <TextInput
+                style={styles.input}
+                value={patient.email}
+                onChangeText={(text) => setPatient({ ...patient, email: text })}
                 placeholder="Email"
               />
-              <TextInput
-                style={styles.input}
-                value={doctor.phone}
-                onChangeText={(text) =>
-                  setDoctor({ ...doctor, phone: text })
-                }
-                placeholder="Phone"
-              />
-              <TextInput
-                style={styles.input}
-                value={doctor.hospital}
-                onChangeText={(text) =>
-                  setDoctor({ ...doctor, hospital: text })
-                }
-                placeholder="Hospital"
-              />
-              <TextInput
-                style={styles.input}
-                value={doctor.experience}
-                onChangeText={(text) =>
-                  setDoctor({ ...doctor, experience: text })
-                }
-                placeholder="Experience"
-              />
 
-              {/* Buttons */}
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.button, { flex: 1, marginRight: 5 }]}
-                  onPress={handleSave}
-                >
-                  <Text style={styles.buttonText}>Save</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.button,
-                    { flex: 1, backgroundColor: "#999", marginLeft: 5 },
-                  ]}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.buttonText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <Text style={styles.saveText}>Save</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>
@@ -167,147 +169,140 @@ export default function DoctorProfile() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F4F6FA",
+    backgroundColor: "#F5F6FA",
+    marginTop: 5,
   },
   scrollContent: {
-    padding: 20,
-    paddingBottom: 100,
-  },
-
-  // Header
-  header: {
     alignItems: "center",
-    backgroundColor: "#2A4D9B",
-    borderRadius: 25,
-    paddingTop: 60,
-    paddingBottom: 50,
+    paddingVertical: 30,
+  },
+  headerContainer: {
+    alignItems: "center",
     marginBottom: 25,
-    marginTop: 20,
-    shadowColor: "#2A4D9B",
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
+    marginTop: 80,
   },
-  headerInner: {
-    alignItems: "center",
+  imageContainer: {
+    position: "relative",
   },
   avatar: {
-    width: 110,
-    height: 110,
-    borderRadius: 60,
-    borderWidth: 3,
-    borderColor: "#fff",
-    marginBottom: 15,
+    width: 210,
+    height: 210,
+    borderRadius: 55,
+  },
+  editIcon: {
+    position: "absolute",
+    bottom: 5,
+    right: 5,
+    backgroundColor: "#28AFB0",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
   name: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#fff",
+    marginTop: 12,
+    color: "#000",
   },
-  specialization: {
-    fontSize: 16,
-    color: "#D9E3FF",
+  role: {
+    fontSize: 14,
+    color: "#777",
     marginTop: 4,
   },
 
-  // Info Card
-  infoCard: {
+  menuContainer: {
+    width: "90%",
     backgroundColor: "#fff",
     borderRadius: 18,
-    padding: 22,
-    marginBottom: 25,
+    paddingVertical: 10,
+    elevation: 4,
     shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.05,
   },
-  infoText: {
-    fontSize: 15,
-    marginBottom: 10,
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderColor: "#eee",
+  },
+  menuLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconWrapper: {
+    backgroundColor: "#28AFB0",
+    borderRadius: 25,
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 15,
+  },
+  menuText: {
+    fontSize: 16,
     color: "#333",
   },
 
-  // Stats Section
-  statsRow: {
+  signOutButton: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 30,
-  },
-  statBox: {
-    backgroundColor: "#F3F6FB",
-    borderRadius: 16,
-    paddingVertical: 20,
+    backgroundColor: "#28AFB0",
+    borderRadius: 12,
+    width: "90%",
+    paddingVertical: 14,
     alignItems: "center",
-    flex: 1,
-    marginHorizontal: 6,
-    shadowColor: "#2A4D9B",
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: "#E1E6F0",
+    justifyContent: "center",
+    marginTop: 30,
   },
-  statValue: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#2A4D9B",
-  },
-  statLabel: {
-    marginTop: 5,
-    fontSize: 13,
-    color: "#555",
-    letterSpacing: 0.5,
-  },
-
-  // Button
-  button: {
-    backgroundColor: "#2A4D9B",
-    borderRadius: 14,
-    paddingVertical: 10,
-    alignItems: "center",
-    marginTop: 10,
-    width: "100%",
-    alignSelf: "center",
-    shadowColor: "#2A4D9B",
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  buttonText: {
+  signOutText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "bold",
-    letterSpacing: 0.5,
+    fontSize: 16,
   },
 
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
-    paddingHorizontal: 20,
   },
   modalContent: {
     backgroundColor: "#fff",
+    margin: 20,
     borderRadius: 16,
-    padding: 20,
+    padding: 25,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 15,
-    color: "#2A4D9B",
+    color: "#28AFB0",
     textAlign: "center",
+    marginBottom: 20,
+  },
+  backButton: {
+    position: "absolute",
+    left: 10,
+    top: 15,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#ddd",
     borderRadius: 10,
-    padding: 10,
+    padding: 12,
     marginBottom: 12,
   },
-  modalButtons: {
-    flexDirection: "row",
-    marginTop: 10,
+  saveButton: {
+    backgroundColor: "#28AFB0",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 15,
+  },
+  saveText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
