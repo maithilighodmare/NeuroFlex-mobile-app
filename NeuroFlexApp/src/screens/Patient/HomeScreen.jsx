@@ -1,211 +1,219 @@
-import React, { useState } from "react";
+import React from "react";
 import {
-  ScrollView,
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  ScrollView,
+  Image,
 } from "react-native";
 
-export default function App() {
-  const services = [
-    {
-      title: "Orthopedic Therapy",
-      desc: "Treatment for bone, joint, and muscle injuries to restore function.",
-      icon: "🦴",
-    },
-    {
-      title: "Neurological Rehab",
-      desc: "Specialized care for stroke, spinal cord injuries, and conditions.",
-      icon: "🧠",
-    },
-    {
-      title: "Sports Therapy",
-      desc: "Treatment & prevention of sports injuries and performance boost.",
-      icon: "⚽",
-    },
-    {
-      title: "Wellness Programs",
-      desc: "Long-term wellness & strength through holistic physiotherapy.",
-      icon: "💪",
-    },
-  ];
-
-  const whyChoose = [
-    { title: "500+", desc: "Patients Treated" },
-    { title: "95%", desc: "Success Rate" },
-    { title: "10+", desc: "Years Experience" },
-    { title: "24/7", desc: "Support Available" },
-  ];
-
+export default function HomeScreen({ navigation }) {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fffdfd" }}>
-      <ScrollView style={styles.container}>
-        {/* HERO */}
-        <View style={styles.hero}>
-          <Text style={styles.heroTitle}>Expert Physiotherapy Care</Text>
-          <Text style={styles.heroSubtitle}>
-            Enhance rehabilitation, improve reflexes with smart technology.
-          </Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* HEADER */}
+        <View style={styles.header}>
+          <Text style={styles.greeting}>Hi, Alex!</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+            <Image
+              source={{
+                uri: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+              }}
+              style={styles.profilePic}
+            />
+          </TouchableOpacity>
         </View>
 
-        {/* OUR SERVICES */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Our Services</Text>
-          <View style={styles.services}>
-            {services.map((s, i) => (
-              <View key={i} style={styles.card}>
-                <Text style={styles.icon}>{s.icon}</Text>
-                <Text style={styles.cardTitle}>{s.title}</Text>
-                <Text style={styles.cardText}>{s.desc}</Text>
-              </View>
-            ))}
+        {/* AVERAGE REFLEX TIME CARD */}
+        <View style={styles.reflexCard}>
+          <View>
+            <Text style={styles.cardTitle}>Average Reflex Time</Text>
+            <Text style={styles.reflexValue}>180 ms</Text>
           </View>
-
-          {/* BIGGER BUTTONS AFTER SERVICES */}
-          <View style={styles.serviceButtons}>
-            <TouchableOpacity
-              style={styles.largeBtn}
-              onPress={() => alert("Go to Dashboard clicked!")}
-            >
-              <Text style={styles.largeBtnText}>Go to Dashboard</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.largeBtn, { backgroundColor: "#293132" }]}
-              onPress={() => alert("FAQ clicked!")}
-            >
-              <Text style={styles.largeBtnText}>FAQ</Text>
-            </TouchableOpacity>
+          <View style={styles.circleContainer}>
+            <View style={styles.outerCircle}>
+              <View style={styles.innerCircle}>
+                <Text style={styles.percentText}>70%</Text>
+              </View>
+            </View>
           </View>
         </View>
 
-        {/* WHY CHOOSE US */}
-        <View style={[styles.section, { backgroundColor: "#e9f9f9" }]}>
-          <Text style={styles.sectionTitle}>Why Choose NeuroFlex?</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.whyContainer}
-          >
-            {whyChoose.map((item, i) => (
-              <View key={i} style={styles.whyCard}>
-                <Text style={styles.whyNumber}>{item.title}</Text>
-                <Text style={styles.whyText}>{item.desc}</Text>
-              </View>
-            ))}
-          </ScrollView>
+        {/* START BUTTON */}
+        <TouchableOpacity
+          style={styles.startButton}
+          onPress={() => navigation.navigate("Dashboard")}
+        >
+          <Text style={styles.startButtonText}>Start Reflex Test</Text>
+        </TouchableOpacity>
+
+        {/* RECENT HISTORY */}
+        <View style={styles.historyCard}>
+          <Text style={styles.historyTitle}>Recent History</Text>
+
+          <View style={styles.historyItem}>
+            <Text style={styles.historyText}>Yesterday: 175 ms</Text>
+            <View style={styles.dot} />
+          </View>
+
+          <View style={styles.historyItem}>
+            <Text style={styles.historyText}>Mon, Oct 23: 182 ms</Text>
+            <View style={styles.dot} />
+          </View>
+
+          <View style={styles.historyItem}>
+            <Text style={styles.historyText}>Sun, Oct 22: 190 ms</Text>
+            <View style={styles.dot} />
+          </View>
         </View>
+
+        {/* GO TO DASHBOARD LINK */}
+        <TouchableOpacity onPress={() => navigation.navigate("Dashboard")}>
+          <Text style={styles.dashboardLink}>Go to Dashboard</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-
-  /* HERO */
-  hero: {
-    paddingVertical: 40,
-    paddingHorizontal: 20,
-    marginBottom: 10,
-    backgroundColor: "#28afb0",
-    alignItems: "center",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+  container: {
+    flex: 1,
+    backgroundColor: "#f9fafa",
   },
-  heroTitle: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#fffdfd",
-    marginTop: 15,
-    marginBottom: 20,
-    textAlign: "center",
+  scrollContainer: {
+    padding: 20,
+    paddingBottom: 40,
+    marginTop: 50,
   },
-  heroSubtitle: {
-    fontSize: 15,
-    color: "#fffdfd",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-
-  /* SECTIONS */
-  section: { padding: 20 },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 16,
-    color: "#293132",
-  },
-
-  /* SERVICES */
-  services: {
+  header: {
     flexDirection: "row",
-    flexWrap: "wrap",
     justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 25,
   },
-  card: {
-    backgroundColor: "#fffdfd",
-    padding: 8,
-    borderRadius: 10,
-    width: "44%",
-    marginBottom: 12,
+  greeting: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#222",
+  },
+  profilePic: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+
+  /* REFLEX CARD */
+  reflexCard: {
+    backgroundColor: "#28afb0",
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  cardTitle: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 6,
+  },
+  reflexValue: {
+    color: "#fff",
+    fontSize: 28,
+    fontWeight: "bold",
+  },
+  circleContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  outerCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 4,
+    borderColor: "#b2e2e3",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  innerCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  percentText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#28afb0",
+  },
+
+  /* START BUTTON */
+  startButton: {
+    backgroundColor: "#28afb0",
+    borderRadius: 25,
+    paddingVertical: 14,
+    marginTop: 25,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 2,
   },
-  icon: { fontSize: 24, marginBottom: 4 },
-  cardTitle: {
-    fontSize: 13,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 2,
-    color: "#293132",
+  startButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
-  cardText: { fontSize: 11, color: "#6b7280", textAlign: "center" },
 
-  /* BIGGER BUTTONS AFTER SERVICES */
-  serviceButtons: {
+  /* HISTORY */
+  historyCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 25,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  historyTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111",
+    marginBottom: 12,
+  },
+  historyItem: {
     flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 16,
-    gap: 12,
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
   },
-  largeBtn: {
-    backgroundColor: "#28afb0",
-    paddingVertical: 12,
-    paddingHorizontal: 22,
-    borderRadius: 8,
-  },
-  largeBtnText: {
-    color: "#fffdfd",
-    fontWeight: "bold",
+  historyText: {
+    color: "#333",
     fontSize: 14,
   },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#28afb0",
+  },
 
-  /* WHY CHOOSE */
-  whyContainer: { paddingVertical: 10 },
-  whyCard: {
-    backgroundColor: "#fffdfd",
-    borderRadius: 12,
-    padding: 18,
-    marginRight: 14,
-    alignItems: "center",
-    width: 140,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  whyNumber: {
-    fontSize: 20,
-    fontWeight: "bold",
+  /* LINK */
+  dashboardLink: {
+    textAlign: "center",
     color: "#28afb0",
-    marginBottom: 4,
+    marginTop: 25,
+    fontWeight: "500",
+    fontSize: 15,
   },
-  whyText: { fontSize: 12, textAlign: "center", color: "#293132" },
 });

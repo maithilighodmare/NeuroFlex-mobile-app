@@ -9,22 +9,25 @@ import {
   SafeAreaView,
   Modal,
   TextInput,
+  Switch,
 } from "react-native";
 import { Feather as Icon } from "@expo/vector-icons";
 
 const patientData = {
   name: "Aashvi Tekade",
   role: "Buyer",
-  username: "albertflorest_",
+  username: "aashvitekade_",
   gender: "Male",
   phone: "+44 1632 960860",
-  email: "albertflorest@email.com",
+  email: "aashvitekade@email.com",
   image: "https://cdn-icons-png.flaticon.com/512/147/147144.png",
 };
 
 export default function PatientProfile() {
   const [patient, setPatient] = useState(patientData);
   const [modalVisible, setModalVisible] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(false);
+  const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
   const handleSave = () => {
     setModalVisible(false);
@@ -60,14 +63,20 @@ export default function PatientProfile() {
             <Icon name="chevron-right" size={22} color="#999" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} activeOpacity={1}>
             <View style={styles.menuLeft}>
               <View style={styles.iconWrapper}>
                 <Icon name="bell" size={20} color="#fff" />
               </View>
               <Text style={styles.menuText}>Notification</Text>
             </View>
-            <Icon name="chevron-right" size={22} color="#999" />
+            <Switch
+              trackColor={{ false: "#767577", true: "#34C759" }}
+              thumbColor={isEnabled ? "#fff" : "#f4f3f4"}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={toggleSwitch}
+              value={isEnabled}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem}>
