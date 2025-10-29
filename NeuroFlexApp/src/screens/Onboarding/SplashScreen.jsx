@@ -1,58 +1,92 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  Image,
   TouchableOpacity,
+  StyleSheet,
   Dimensions,
+  SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 const slides = [
-  { id: 1, text: "Track your recovery progress in real-time" },
-  { id: 2, text: "Smart physiotherapy exercises made simple" },
-  { id: 3, text: "Personalized dashboard for doctors & patients" },
+  {
+    id: 1,
+    title: "Track Recovery Progress",
+    desc: "Monitor your healing journey with real-time insights and progress tracking.",
+    image: require("../../../assets/onboard1.png"),
+    bg: "#C0F0ED",
+  },
+  {
+    id: 2,
+    title: "Smart Physiotherapy Exercises",
+    desc: "Perform exercises with guided feedback and sensor-based accuracy.",
+    image: require("../../../assets/onboard2.png"),
+    bg: "#C8E8E7",
+  },
+  {
+    id: 3,
+    title: "Personalized Dashboard",
+    desc: "Access tailored insights for doctors and patients in one simple view.",
+    image: require("../../../assets/onboard3.png"),
+    bg: "#BCE3E0",
+  },
 ];
 
 export default function OnboardingScreen({ navigation }) {
   const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
-
   const nextSlide = () => setIndex((prev) => (prev + 1) % slides.length);
   const prevSlide = () =>
     setIndex((prev) => (prev - 1 + slides.length) % slides.length);
 
+  const current = slides[index];
+
   return (
-    <View style={styles.container}>
-      {/* Skip button */}
+    <SafeAreaView style={[styles.container, { backgroundColor: current.bg }]}>
+      {/* Skip Button */}
       <TouchableOpacity
-        style={styles.skipBtn}
+        style={styles.skipButton}
         onPress={() => navigation.replace("Login")}
       >
         <Text style={styles.skipText}>Skip</Text>
       </TouchableOpacity>
 
-      {/* Slide content */}
-      <View style={styles.slide}>
-        <Text style={styles.text}>{slides[index].text}</Text>
+      {/* Main Illustration */}
+      <View style={styles.imageContainer}>
+        <Image
+          source={current.image}
+          style={styles.image}
+          resizeMode="contain"
+        />
       </View>
 
-      {/* Navigation Arrows */}
-      <View style={styles.arrows}>
+      {/* Title and Description */}
+      <View style={styles.textContainer}>
+        <Text style={styles.title}>{current.title}</Text>
+        <Text style={styles.desc}>{current.desc}</Text>
+      </View>
+
+      {/* Bottom Controls */}
+      <View style={styles.controls}>
         <TouchableOpacity onPress={prevSlide}>
           <Ionicons name="arrow-back-circle" size={40} color="#007B83" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={nextSlide}>
-          <Ionicons name="arrow-forward-circle" size={40} color="#007B83" />
-        </TouchableOpacity>
+
+        {index === slides.length - 1 ? (
+          <TouchableOpacity
+            style={styles.startBtn}
+            onPress={() => navigation.replace("Login")}
+          >
+            <Text style={styles.startText}>Start</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={nextSlide}>
+            <Ionicons name="arrow-forward-circle" size={40} color="#007B83" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Dots Indicator */}
@@ -61,61 +95,88 @@ export default function OnboardingScreen({ navigation }) {
           <View key={i} style={[styles.dot, index === i && styles.activeDot]} />
         ))}
       </View>
-
-      {/* Continue button on last slide */}
-      {index === slides.length - 1 && (
-        <TouchableOpacity
-          style={styles.startBtn}
-          onPress={() => navigation.replace("Login")}
-        >
-          <Text style={styles.startText}>Get Started</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  skipBtn: { position: "absolute", top: 50, right: 20 },
-  skipText: { fontSize: 16, color: "#007BFF" },
-  slide: {
-    width: width * 0.8,
-    height: 200,
     justifyContent: "center",
-    alignItems: "center",
   },
-  text: {
-    fontSize: 22,
-    fontWeight: "600",
+  skipButton: {
+    position: "absolute",
+    top: 40,
+    right: 25,
+    zIndex: 10,
+  },
+  skipText: {
+    fontSize: 16,
     color: "#007B83",
-    textAlign: "center",
+    fontWeight: "600",
   },
-  arrows: {
+  imageContainer: {
+    flex: 0.55,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  image: {
+    width: width * 0.8,
+    height: height * 0.4,
+  },
+  textContainer: {
+    flex: 0.25,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 25,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#004F55",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  desc: {
+    fontSize: 16,
+    color: "#005A60",
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  controls: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     width: "60%",
+    marginTop: 15,
+  },
+  startBtn: {
+    backgroundColor: "#007B83",
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 30,
+  },
+  startText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  dots: {
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 20,
   },
-  dots: { flexDirection: "row", marginTop: 15 },
   dot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#ccc",
-    margin: 5,
+    backgroundColor: "#9FD4D1",
+    marginHorizontal: 5,
   },
-  activeDot: { backgroundColor: "#007B83" },
-  startBtn: {
-    marginTop: 30,
-    backgroundColor: "#0097A7",
-    padding: 15,
-    borderRadius: 10,
+  activeDot: {
+    backgroundColor: "#007B83",
+    width: 12,
+    height: 12,
   },
-  startText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });
