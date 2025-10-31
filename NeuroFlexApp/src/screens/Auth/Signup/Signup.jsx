@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -8,6 +9,7 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker"; // dropdown
 import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
 
 export default function Signup({ navigation }) {
   const [name, setName] = useState("");
@@ -16,11 +18,44 @@ export default function Signup({ navigation }) {
   const [age, setAge] = useState("");
   const [role, setRole] = useState("Patient"); // default role
 
-  const handleSignup = () => {
-    if (role === "Doctor") {
-      navigation.replace("Doctor");
-    } else {
-      navigation.replace("Patient");
+  const handleSignup = async () => {
+    try {
+      // ✅ Send data to backend
+      
+        const response = await axios.post(
+          "https://neuro-flex-mat-backend.vercel.app/user/signup",
+          { name, email, password, age, role }
+        );
+   
+        // const response = await axios.post(
+        //   "https://neuro-flex-mat-backend.vercel.app/doctor/signup",
+        //   { name, email, password, age, role }
+        // );
+      
+      console.log("Signup Response:", response.data);
+
+      // ✅ Extract user data (change fields based on your backend response)
+      const userData = {
+        name: response.data.name,
+        email: response.data.email,
+        age: response.data.age,
+        role: response.data.role,
+        token: response.data.token, // if backend sends token
+      };
+
+      // ✅ Store user data in AsyncStorage
+      await AsyncStorage.setItem("data", JSON.stringify(userData));
+
+      console.log("✅ User stored in AsyncStorage");
+
+      // ✅ Redirect based on role
+      if (role === "Doctor") {
+        navigation.replace("Doctor");
+      } else {
+        navigation.replace("Patient");
+      }
+    } catch (error) {
+      console.error("Signup Error:", error.response?.data || error.message);
     }
   };
 

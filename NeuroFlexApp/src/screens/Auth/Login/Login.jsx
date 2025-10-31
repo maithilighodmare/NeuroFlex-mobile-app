@@ -7,14 +7,37 @@ import {
   StyleSheet,
 } from "react-native";
 import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
+import { Picker } from "@react-native-picker/picker"; // dropdown
+
 
 export default function Login({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+    const [role, setRole] = useState("Patient"); // default role
+  
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     console.log("Email:", email, "Password:", password);
-    navigation.navigate("PatientDashboard"); // keep same route
+    if(!email || !password ||!role){
+      return;
+    }
+    try {
+      const data = await axios.post(
+        "https://neuro-flex-mat-backend.vercel.app/user/login",
+        { email, password ,role}
+      );
+      console.log(data.data);
+
+      // ✅ Move navigation here so it only runs after successful login
+      if (role === "Doctor") {
+        navigation.replace("Doctor");
+      } else {
+        navigation.replace("Patient");
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
   };
 
   return (
@@ -38,6 +61,17 @@ export default function Login({ navigation }) {
         onChangeText={setPassword}
         secureTextEntry
       />
+
+
+       <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={role}
+          onValueChange={(itemValue) => setRole(itemValue)}
+        >
+          <Picker.Item label="Patient" value="Patient" />
+          <Picker.Item label="Doctor" value="Doctor" />
+        </Picker>
+      </View>
 
       <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>

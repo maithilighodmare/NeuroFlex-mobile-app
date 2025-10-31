@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   TextInput,
 } from "react-native";
 import { Feather as Icon } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const patientData = {
   name: "Aashvi Tekade",
@@ -29,6 +30,19 @@ export default function PatientProfile() {
   const handleSave = () => {
     setModalVisible(false);
   };
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const data = await AsyncStorage.getItem("data");
+      if (data) {
+        patientData.name = data.name;
+        patientData.email = data.email;
+        patientData.role = data.role;
+      }
+    };
+
+    loadUser();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>

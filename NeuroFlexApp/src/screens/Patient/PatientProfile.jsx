@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   View,
   Text,
@@ -23,11 +23,27 @@ const patientData = {
   image: "https://cdn-icons-png.flaticon.com/512/147/147144.png",
 };
 
+
+
 export default function PatientProfile() {
   const [patient, setPatient] = useState(patientData);
   const [modalVisible, setModalVisible] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
+
+
+    useEffect(() => {
+    const loadUser = async () => {
+      const data = await AsyncStorage.getItem("data");
+      if (data) {
+        patientData.name = data.name;
+        patientData.email = data.email;
+        patientData.role = data.role;
+      }
+    };
+
+    loadUser();
+  }, []);
 
   const handleSave = () => {
     setModalVisible(false);
