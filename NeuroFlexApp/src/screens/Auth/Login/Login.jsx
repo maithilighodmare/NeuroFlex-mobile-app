@@ -18,6 +18,8 @@ export default function Login({ navigation }) {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("Patient");
   const [loading, setLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
 
   const [showPassword, setShowPassword] = useState(false); // ✅ NEW TOGGLE
 
