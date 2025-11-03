@@ -5,39 +5,55 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
-import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import { AntDesign, FontAwesome, Feather } from "@expo/vector-icons";
 import axios from "axios";
-import { Picker } from "@react-native-picker/picker"; // dropdown
-
+import { Picker } from "@react-native-picker/picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Login({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-    const [role, setRole] = useState("Patient"); // default role
-  
+  const [role, setRole] = useState("Patient");
+  const [loading, setLoading] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false); // ✅ NEW TOGGLE
 
   const handleLogin = async () => {
-    console.log("Email:", email, "Password:", password);
-    if(!email || !password ||!role){
-      return;
-    }
-    try {
-      const data = await axios.post(
-        "https://neuro-flex-mat-backend.vercel.app/user/login",
-        { email, password ,role}
-      );
-      console.log(data.data);
+    if (!email || !password) return Alert.alert("Error", "All fields required");
 
-      // ✅ Move navigation here so it only runs after successful login
-      if (role === "Doctor") {
-        navigation.replace("Doctor");
-      } else {
-        navigation.replace("Patient");
-      }
-    } catch (error) {
-      console.log(error.message);
+    setLoading(true);
+
+    try {
+      const apiRole = role === "Patient" ? "user" : "doctor";
+
+      const res = await axios.post(
+        `https://neuro-flex-mat-backend.vercel.app/${apiRole}/login`,
+        { email, password }
+      );
+
+      const userObj = apiRole === "user" ? res.data.user : res.data.doctor;
+
+      const userData = {
+        _id: userObj._id,
+        name: userObj.name,
+        email: userObj.email,
+        age: userObj.age,
+        role: userObj.role,
+        token: res.data.token,
+        dataArr: userObj.dataArr || [],
+      };
+
+      await AsyncStorage.setItem("data", JSON.stringify(userData));
+
+      navigation.replace(role === "Doctor" ? "Doctor" : "Patient");
+    } catch (err) {
+      Alert.alert("Login Failed", err.response?.data?.message || "Try again");
     }
+
+    setLoading(false);
   };
 
   return (
@@ -54,27 +70,49 @@ export default function Login({ navigation }) {
         autoCapitalize="none"
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      {/* ✅ Password Input + Eye Button */}
+      <View style={{ position: "relative" }}>
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword} // ✅ Toggle visibility
+        />
 
-
-       <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={role}
-          onValueChange={(itemValue) => setRole(itemValue)}
+        <TouchableOpacity
+          onPress={() => setShowPassword(!showPassword)}
+          style={{
+            position: "absolute",
+            right: 15,
+            top: 18,
+          }}
         >
+          <Feather
+            name={showPassword ? "eye" : "eye-off"} // ✅ Icon change
+            size={20}
+            color="#555"
+          />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.pickerContainer}>
+        <Picker selectedValue={role} onValueChange={setRole}>
           <Picker.Item label="Patient" value="Patient" />
           <Picker.Item label="Doctor" value="Doctor" />
         </Picker>
       </View>
 
-      <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity
+        style={styles.primaryButton}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Login</Text>
+        )}
       </TouchableOpacity>
 
       <TouchableOpacity>
@@ -82,6 +120,7 @@ export default function Login({ navigation }) {
       </TouchableOpacity>
 
       <Text style={styles.orText}>Or</Text>
+
       <View style={styles.socialContainer}>
         <TouchableOpacity style={styles.socialButton}>
           <AntDesign name="google" size={20} color="#DB4437" />
@@ -103,6 +142,9 @@ export default function Login({ navigation }) {
   );
 }
 
+//
+// ✅ YOUR ORIGINAL STYLES (UNCHANGED)
+//
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -183,5 +225,12 @@ const styles = StyleSheet.create({
     color: "#007BFF",
     fontSize: 15,
     textAlign: "center",
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    marginBottom: 15,
+    backgroundColor: "#f9f9f9",
   },
 });

@@ -1,4 +1,5 @@
-import React, { useState ,useEffect} from "react";
+// Signup.js
+import React, { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
@@ -6,9 +7,11 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker"; // dropdown
-import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
+import { AntDesign, FontAwesome, Feather } from "@expo/vector-icons";
 import axios from "axios";
 
 export default function Signup({ navigation }) {
@@ -16,47 +19,50 @@ export default function Signup({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [age, setAge] = useState("");
-  const [role, setRole] = useState("Patient"); // default role
+  const [role, setRole] = useState("Patient");
+  const [loading, setLoading] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false); // ✅ NEW
 
   const handleSignup = async () => {
-    try {
-      // ✅ Send data to backend
-      
-        const response = await axios.post(
-          "https://neuro-flex-mat-backend.vercel.app/user/signup",
-          { name, email, password, age, role }
-        );
-   
-        // const response = await axios.post(
-        //   "https://neuro-flex-mat-backend.vercel.app/doctor/signup",
-        //   { name, email, password, age, role }
-        // );
-      
-      console.log("Signup Response:", response.data);
+    if (!name || !email || !password || !age)
+      return Alert.alert("Error", "All fields required");
 
-      // ✅ Extract user data (change fields based on your backend response)
+    setLoading(true);
+
+    try {
+      const apiRole = role === "Patient" ? "user" : "doctor";
+
+      const res = await axios.post(
+        `https://neuro-flex-mat-backend.vercel.app/${apiRole}/signup`,
+        { name, email, password, age, role }
+      );
+
+      const user = apiRole === "user" ? res.data.newUser : res.data.newDoctor;
+
       const userData = {
-        name: response.data.name,
-        email: response.data.email,
-        age: response.data.age,
-        role: response.data.role,
-        token: response.data.token, // if backend sends token
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        age: user.age,
+        role: user.role,
+        dataArr: user.dataArr || [],
       };
 
-      // ✅ Store user data in AsyncStorage
       await AsyncStorage.setItem("data", JSON.stringify(userData));
 
-      console.log("✅ User stored in AsyncStorage");
+      // ✅ Beautiful success message
+      Alert.alert(
+        "✅ Account Created!",
+        "Your registration was successful.\nWelcome aboard!",
+        [{ text: "Continue", onPress: () => navigation.replace(role === "Doctor" ? "Doctor" : "Patient") }]
+      );
 
-      // ✅ Redirect based on role
-      if (role === "Doctor") {
-        navigation.replace("Doctor");
-      } else {
-        navigation.replace("Patient");
-      }
-    } catch (error) {
-      console.error("Signup Error:", error.response?.data || error.message);
+    } catch (err) {
+      Alert.alert("Signup Failed", err.response?.data?.message || "Try again");
     }
+
+    setLoading(false);
   };
 
   return (
@@ -70,6 +76,7 @@ export default function Signup({ navigation }) {
         value={name}
         onChangeText={setName}
       />
+
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -78,6 +85,7 @@ export default function Signup({ navigation }) {
         keyboardType="email-address"
         autoCapitalize="none"
       />
+
       <TextInput
         style={styles.input}
         placeholder="Age"
@@ -86,37 +94,58 @@ export default function Signup({ navigation }) {
         keyboardType="numeric"
       />
 
-      {/* Dropdown for Role */}
       <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={role}
-          onValueChange={(itemValue) => setRole(itemValue)}
-        >
+        <Picker selectedValue={role} onValueChange={setRole}>
           <Picker.Item label="Patient" value="Patient" />
           <Picker.Item label="Doctor" value="Doctor" />
         </Picker>
       </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      {/* ✅ Password Input + Eye Toggle */}
+      <View style={{ position: "relative" }}>
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity
+          onPress={() => setShowPassword(!showPassword)}
+          style={{
+            position: "absolute",
+            right: 15,
+            top: 18,
+          }}
+        >
+          <Feather
+            name={showPassword ? "eye" : "eye-off"}
+            size={20}
+            color="#555"
+          />
+        </TouchableOpacity>
+      </View>
 
-      {/* Primary Signup Button */}
-      <TouchableOpacity style={styles.primaryButton} onPress={handleSignup}>
-        <Text style={styles.buttonText}>Sign Up</Text>
+      <TouchableOpacity
+        style={styles.primaryButton}
+        onPress={handleSignup}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Sign Up</Text>
+        )}
       </TouchableOpacity>
 
-      {/* Social Login */}
       <Text style={styles.orText}>Or</Text>
+
       <View style={styles.socialContainer}>
         <TouchableOpacity style={styles.socialButton}>
           <AntDesign name="google" size={20} color="#DB4437" />
           <Text style={styles.socialText}>Google</Text>
         </TouchableOpacity>
+
         <TouchableOpacity style={styles.socialButton}>
           <FontAwesome name="facebook" size={20} color="#3b5998" />
           <Text style={styles.socialText}>Facebook</Text>
@@ -133,6 +162,7 @@ export default function Signup({ navigation }) {
   );
 }
 
+// ✅ Your styles (unchanged)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -143,7 +173,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "#007B83", // teal like website
+    color: "#007B83",
+    marginBottom: 25,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#555",
     marginBottom: 25,
     textAlign: "center",
   },
@@ -155,12 +191,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 15,
     backgroundColor: "#f9f9f9",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 25,
-    textAlign: "center",
   },
   pickerContainer: {
     borderWidth: 1,

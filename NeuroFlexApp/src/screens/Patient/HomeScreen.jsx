@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,18 +8,38 @@ import {
   ScrollView,
   Image,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function HomeScreen({ navigation }) {
+  const [user, setUser] = useState(null);
+
+  // ✅ Load user from AsyncStorage
+  useEffect(() => {
+    const loadUser = async () => {
+      const stored = await AsyncStorage.getItem("data");
+      if (stored) {
+        setUser(JSON.parse(stored));
+      }
+    };
+    loadUser();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+
         {/* HEADER */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>Hi, Alex!</Text>
+          <Text style={styles.greeting}>
+            {user?.name ? `Hi, ${user.name}!` : "Hi, User!"}
+          </Text>
+
           <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
             <Image
               source={{
-                uri: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+                uri:
+                  user?.image ||
+                  "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
               }}
               style={styles.profilePic}
             />
@@ -69,10 +89,11 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        {/* GO TO DASHBOARD LINK */}
+        {/* GO TO DASHBOARD */}
         <TouchableOpacity onPress={() => navigation.navigate("Dashboard")}>
           <Text style={styles.dashboardLink}>Go to Dashboard</Text>
         </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -105,7 +126,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
 
-  /* REFLEX CARD */
   reflexCard: {
     backgroundColor: "#28afb0",
     borderRadius: 16,
@@ -156,7 +176,6 @@ const styles = StyleSheet.create({
     color: "#28afb0",
   },
 
-  /* START BUTTON */
   startButton: {
     backgroundColor: "#28afb0",
     borderRadius: 25,
@@ -174,7 +193,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  /* HISTORY */
   historyCard: {
     backgroundColor: "#fff",
     borderRadius: 16,
@@ -208,7 +226,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#28afb0",
   },
 
-  /* LINK */
   dashboardLink: {
     textAlign: "center",
     color: "#28afb0",

@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,40 +9,93 @@ import {
   SafeAreaView,
   Modal,
   TextInput,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Feather as Icon } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
-const patientData = {
-  name: "Aashvi Tekade",
-  role: "Buyer",
-  username: "albertflorest_",
-  gender: "Male",
-  phone: "+44 1632 960860",
-  email: "albertflorest@email.com",
-  image: "https://cdn-icons-png.flaticon.com/512/147/147144.png",
-};
-
-export default function PatientProfile() {
-  const [patient, setPatient] = useState(patientData);
+export default function PatientProfile({ navigation }) {
+  const [patient, setPatient] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    setModalVisible(false);
+  // ✅ Load user from AsyncStorage
+  const loadUser = async () => {
+    try {
+      const data = await AsyncStorage.getItem("data");
+      if (data) {
+        const parsed = JSON.parse(data);
+        setPatient({
+          ...parsed,
+          age: parsed.age ? String(parsed.age) : "",
+          image:
+            parsed.image || "https://cdn-icons-png.flaticon.com/512/147/147144.png",
+        });
+      }
+    } catch (e) {
+      console.log("Load user error:", e);
+    }
   };
 
   useEffect(() => {
-    const loadUser = async () => {
-      const data = await AsyncStorage.getItem("data");
-      if (data) {
-        patientData.name = data.name;
-        patientData.email = data.email;
-        patientData.role = data.role;
-      }
-    };
-
     loadUser();
   }, []);
+
+  // ✅ Save updated data to backend + AsyncStorage
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      const stored = await AsyncStorage.getItem("data");
+      const parsed = JSON.parse(stored);
+
+      // ✅ HIT BACKEND UPDATE API
+      const res = await axios.put(
+        "https://neuro-flex-mat-backend.vercel.app/user/update",
+        {
+          name: patient.name,
+          age: patient.age,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${parsed.token}`,
+          },
+        }
+      );
+
+      // ✅ NEW UPDATED USER
+      const updatedUser = {
+        ...parsed,
+        name: res.data.user.name,
+        age: res.data.user.age,
+      };
+
+      // ✅ Save updated data to AsyncStorage
+      await AsyncStorage.setItem("data", JSON.stringify(updatedUser));
+
+      // ✅ Update UI
+      setPatient(updatedUser);
+
+      setSaving(false);
+      setModalVisible(false);
+
+      Alert.alert("Updated ✅", "Profile updated successfully.");
+    } catch (error) {
+      setSaving(false);
+      console.log("Update error:", error);
+      Alert.alert("Error", "Could not update profile.");
+    }
+  };
+
+  if (!patient) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#28AFB0" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -73,56 +126,22 @@ export default function PatientProfile() {
             </View>
             <Icon name="chevron-right" size={22} color="#999" />
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuLeft}>
-              <View style={styles.iconWrapper}>
-                <Icon name="bell" size={20} color="#fff" />
-              </View>
-              <Text style={styles.menuText}>Notification</Text>
-            </View>
-            <Icon name="chevron-right" size={22} color="#999" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuLeft}>
-              <View style={styles.iconWrapper}>
-                <Icon name="map-pin" size={20} color="#fff" />
-              </View>
-              <Text style={styles.menuText}>Address</Text>
-            </View>
-            <Icon name="chevron-right" size={22} color="#999" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuLeft}>
-              <View style={styles.iconWrapper}>
-                <Icon name="lock" size={20} color="#fff" />
-              </View>
-              <Text style={styles.menuText}>Change Password</Text>
-            </View>
-            <Icon name="chevron-right" size={22} color="#999" />
-          </TouchableOpacity>
         </View>
 
-        {/* Sign Out Button */}
-        <TouchableOpacity style={styles.signOutButton}>
-          <Icon
-            name="log-out"
-            size={18}
-            color="#fff"
-            style={{ marginRight: 8 }}
-          />
+        {/* Sign Out */}
+        <TouchableOpacity
+          style={styles.signOutButton}
+          onPress={async () => {
+            await AsyncStorage.removeItem("data");
+            navigation.replace("Login");
+          }}
+        >
+          <Icon name="log-out" size={18} color="#fff" />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
 
-        {/* Edit Profile Modal */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
+        {/* Edit Modal */}
+        <Modal animationType="slide" transparent visible={modalVisible}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <TouchableOpacity
@@ -137,40 +156,22 @@ export default function PatientProfile() {
               <TextInput
                 style={styles.input}
                 value={patient.name}
-                onChangeText={(text) => setPatient({ ...patient, name: text })}
-                placeholder="Name"
+                onChangeText={(t) => setPatient({ ...patient, name: t })}
               />
+
               <TextInput
                 style={styles.input}
-                value={patient.username}
-                onChangeText={(text) =>
-                  setPatient({ ...patient, username: text })
-                }
-                placeholder="Username"
-              />
-              <TextInput
-                style={styles.input}
-                value={patient.gender}
-                onChangeText={(text) =>
-                  setPatient({ ...patient, gender: text })
-                }
-                placeholder="Gender"
-              />
-              <TextInput
-                style={styles.input}
-                value={patient.phone}
-                onChangeText={(text) => setPatient({ ...patient, phone: text })}
-                placeholder="Phone Number"
-              />
-              <TextInput
-                style={styles.input}
-                value={patient.email}
-                onChangeText={(text) => setPatient({ ...patient, email: text })}
-                placeholder="Email"
+                value={String(patient.age)}
+                onChangeText={(t) => setPatient({ ...patient, age: t })}
+                keyboardType="numeric"
               />
 
               <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                <Text style={styles.saveText}>Save</Text>
+                {saving ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.saveText}>Save</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -180,6 +181,9 @@ export default function PatientProfile() {
   );
 }
 
+//
+// ✅ ALL YOUR STYLES — NO CHANGE
+//
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -225,7 +229,6 @@ const styles = StyleSheet.create({
     color: "#777",
     marginTop: 4,
   },
-
   menuContainer: {
     width: "90%",
     backgroundColor: "#fff",
@@ -261,7 +264,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   },
-
   signOutButton: {
     flexDirection: "row",
     backgroundColor: "#28AFB0",
@@ -271,13 +273,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 30,
+    gap: 8,
   },
   signOutText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",

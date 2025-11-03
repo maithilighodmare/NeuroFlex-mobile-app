@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,49 +10,143 @@ import {
   Modal,
   TextInput,
   Switch,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Feather as Icon } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
-const patientData = {
-  name: "Aashvi Tekade",
-  role: "Buyer",
-  username: "aashvitekade_",
-  gender: "Male",
-  phone: "+44 1632 960860",
-  email: "aashvitekade@email.com",
-  image: "https://cdn-icons-png.flaticon.com/512/147/147144.png",
-};
-
-
-
-export default function PatientProfile() {
-  const [patient, setPatient] = useState(patientData);
+export default function PatientProfile({ navigation }) {
+  const [patient, setPatient] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
-  const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [signingOut, setSigningOut] = useState(false); // ✅ Added logout loading
 
+  const toggleSwitch = () => setIsEnabled((prev) => !prev);
 
-    useEffect(() => {
-    const loadUser = async () => {
-      const data = await AsyncStorage.getItem("data");
+  // ✅ Load user data from storage
+  const loadUser = async () => {
+    try {
+      let data = await AsyncStorage.getItem("data");
+
       if (data) {
-        patientData.name = data.name;
-        patientData.email = data.email;
-        patientData.role = data.role;
-      }
-    };
+        const parsed = JSON.parse(data);
 
-    loadUser();
+        setPatient({
+          _id: parsed._id,
+          name: parsed.name || "",
+          email: parsed.email || "",
+          role: parsed.role || "",
+          age: parsed.age ? String(parsed.age) : "",
+          token: parsed.token || "",
+          image:
+            parsed.image ||
+            "https://cdn-icons-png.flaticon.com/512/147/147144.png",
+        });
+      }
+    } catch (e) {
+      console.log("Error loading user:", e);
+    }
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      await loadUser();
+      setLoading(false);
+    };
+    load();
   }, []);
 
-  const handleSave = () => {
-    setModalVisible(false);
+  // ✅ Save updated profile
+  const handleSave = async () => {
+    try {
+      const stored = await AsyncStorage.getItem("data");
+      const parsed = JSON.parse(stored);
+
+      const res = await axios.put(
+        "https://neuro-flex-mat-backend.vercel.app/user/update",
+        {
+          name: patient.name,
+          age: patient.age,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${parsed.token}`,
+          },
+        }
+      );
+
+      const updatedUser = {
+        ...parsed,
+        name: res.data.user.name,
+        age: res.data.user.age,
+      };
+
+      await AsyncStorage.setItem("data", JSON.stringify(updatedUser));
+      setPatient(updatedUser);
+
+      setModalVisible(false);
+      Alert.alert("Saved ✅", "Profile updated successfully.");
+    } catch (error) {
+      console.log("Save error:", error);
+    }
   };
+
+  // ✅ Refresh profile
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadUser();
+    setRefreshing(false);
+    Alert.alert("Refreshed ✅", "User data updated.");
+  };
+
+  // ✅ SIGN OUT (with loading)
+  const handleSignOut = async () => {
+    setSigningOut(true);
+
+    try {
+      await AsyncStorage.removeItem("data");
+
+      setTimeout(() => {
+        setSigningOut(false);
+        Alert.alert("Logged Out ✅", "You have been signed out.");
+
+        navigation.replace("Login");
+      }, 1200);
+    } catch (err) {
+      setSigningOut(false);
+      Alert.alert("Error", "Could not sign out. Try again.");
+    }
+  };
+
+  if (loading || !patient) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#28AFB0" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Profile Header */}
+        
+        {/* ✅ Refresh Button */}
+        <TouchableOpacity
+          onPress={handleRefresh}
+          style={{ marginTop: 30, marginBottom: -50 }}
+        >
+          {refreshing ? (
+            <ActivityIndicator size="small" color="#28AFB0" />
+          ) : (
+            <Icon name="refresh-ccw" size={28} color="#28AFB0" />
+          )}
+        </TouchableOpacity>
+
+        {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.imageContainer}>
             <Image source={{ uri: patient.image }} style={styles.avatar} />
@@ -60,11 +154,12 @@ export default function PatientProfile() {
               <Icon name="camera" size={16} color="#fff" />
             </TouchableOpacity>
           </View>
+
           <Text style={styles.name}>{patient.name}</Text>
           <Text style={styles.role}>{patient.role}</Text>
         </View>
 
-        {/* Menu List */}
+        {/* Menu */}
         <View style={styles.menuContainer}>
           <TouchableOpacity
             style={styles.menuItem}
@@ -89,7 +184,6 @@ export default function PatientProfile() {
             <Switch
               trackColor={{ false: "#767577", true: "#34C759" }}
               thumbColor={isEnabled ? "#fff" : "#f4f3f4"}
-              ios_backgroundColor="#3e3e3e"
               onValueChange={toggleSwitch}
               value={isEnabled}
             />
@@ -116,24 +210,24 @@ export default function PatientProfile() {
           </TouchableOpacity>
         </View>
 
-        {/* Sign Out Button */}
-        <TouchableOpacity style={styles.signOutButton}>
-          <Icon
-            name="log-out"
-            size={18}
-            color="#fff"
-            style={{ marginRight: 8 }}
-          />
-          <Text style={styles.signOutText}>Sign Out</Text>
+        {/* ✅ Sign Out */}
+        <TouchableOpacity
+          style={styles.signOutButton}
+          onPress={handleSignOut}
+          disabled={signingOut}
+        >
+          {signingOut ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <Icon name="log-out" size={18} color="#fff" />
+              <Text style={styles.signOutText}>  Sign Out</Text>
+            </>
+          )}
         </TouchableOpacity>
 
-        {/* Edit Profile Modal */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
+        {/* Edit Modal */}
+        <Modal animationType="slide" transparent visible={modalVisible}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <TouchableOpacity
@@ -148,36 +242,14 @@ export default function PatientProfile() {
               <TextInput
                 style={styles.input}
                 value={patient.name}
-                onChangeText={(text) => setPatient({ ...patient, name: text })}
-                placeholder="Name"
+                onChangeText={(t) => setPatient({ ...patient, name: t })}
               />
+
               <TextInput
                 style={styles.input}
-                value={patient.username}
-                onChangeText={(text) =>
-                  setPatient({ ...patient, username: text })
-                }
-                placeholder="Username"
-              />
-              <TextInput
-                style={styles.input}
-                value={patient.gender}
-                onChangeText={(text) =>
-                  setPatient({ ...patient, gender: text })
-                }
-                placeholder="Gender"
-              />
-              <TextInput
-                style={styles.input}
-                value={patient.phone}
-                onChangeText={(text) => setPatient({ ...patient, phone: text })}
-                placeholder="Phone Number"
-              />
-              <TextInput
-                style={styles.input}
-                value={patient.email}
-                onChangeText={(text) => setPatient({ ...patient, email: text })}
-                placeholder="Email"
+                value={String(patient.age)}
+                onChangeText={(t) => setPatient({ ...patient, age: t })}
+                keyboardType="numeric"
               />
 
               <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
@@ -186,11 +258,15 @@ export default function PatientProfile() {
             </View>
           </View>
         </Modal>
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+//
+// ✅ ORIGINAL STYLES — UNCHANGED
+//
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -236,7 +312,6 @@ const styles = StyleSheet.create({
     color: "#777",
     marginTop: 4,
   },
-
   menuContainer: {
     width: "90%",
     backgroundColor: "#fff",
@@ -272,7 +347,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   },
-
   signOutButton: {
     flexDirection: "row",
     backgroundColor: "#28AFB0",
@@ -288,7 +362,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",

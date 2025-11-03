@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,64 +9,86 @@ import {
   Modal,
   FlatList,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BarChart } from "react-native-chart-kit";
 import * as Progress from "react-native-progress";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const screenWidth = Dimensions.get("window").width - 40;
 
-const patient = {
-  name: "Dipak Mundhe",
-  id: "INFO01",
-  recovery: 78,
-  sessions: 24,
-  compliance: 92,
-};
-
-const chartData = {
-  Daily: {
-    Hand: [320, 310, 305, 300, 295, 290, 285],
-    Leg: [450, 440, 430, 420, 410, 400, 390],
-    Overall: [385, 375, 370, 360, 350, 345, 340],
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  },
-  Weekly: {
-    Hand: [310, 300, 290, 280],
-    Leg: [440, 420, 400, 380],
-    Overall: [375, 360, 345, 330],
-    labels: ["W1", "W2", "W3", "W4"],
-  },
-  Monthly: {
-    Hand: [300, 290, 280, 270],
-    Leg: [420, 410, 390, 370],
-    Overall: [365, 350, 335, 320],
-    labels: ["Jan", "Feb", "Mar", "Apr"],
-  },
-};
-
-const categories = ["Overall", "Hand", "Leg"];
-
 export default function PatientDashboard() {
+  const [user, setUser] = useState(null);
   const [filter, setFilter] = useState("Weekly");
   const [category, setCategory] = useState("Overall");
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // ✅ Load updated user from AsyncStorage (same as profile)
+  const loadUser = async () => {
+    try {
+      const data = await AsyncStorage.getItem("data");
+      if (data) {
+        const parsed = JSON.parse(data);
+
+        setUser({
+          name: parsed.name || "",
+          email: parsed.email || "",
+          age: parsed.age || "",
+          role: parsed.role || "",
+          recovery: parsed.recovery || 78,
+          sessions: parsed.sessions || 24,
+          compliance: parsed.compliance || 92,
+        });
+      }
+    } catch (error) {
+      console.log("Dashboard load error:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  // ✅ Default chart data
+  const chartData = {
+    Daily: {
+      Hand: [320, 310, 305, 300, 295, 290, 285],
+      Leg: [450, 440, 430, 420, 410, 400, 390],
+      Overall: [385, 375, 370, 360, 350, 345, 340],
+      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    },
+    Weekly: {
+      Hand: [310, 300, 290, 280],
+      Leg: [440, 420, 400, 380],
+      Overall: [375, 360, 345, 330],
+      labels: ["W1", "W2", "W3", "W4"],
+    },
+    Monthly: {
+      Hand: [300, 290, 280, 270],
+      Leg: [420, 410, 390, 370],
+      Overall: [365, 350, 335, 320],
+      labels: ["Jan", "Feb", "Mar", "Apr"],
+    },
+  };
+
+  const categories = ["Overall", "Hand", "Leg"];
+
+  // ✅ Stats (now fully synced from updated AsyncStorage)
   const stats = [
     {
       label: "Recovery",
-      value: `${patient.recovery}%`,
+      value: `${user?.recovery || 78}%`,
       icon: "heart-pulse",
       colors: ["#28AFB0", "#28AFB0"],
     },
     {
       label: "Sessions",
-      value: patient.sessions,
+      value: user?.sessions || 24,
       icon: "calendar-check",
       colors: ["#28AFB0", "#28AFB0"],
     },
     {
       label: "Compliance",
-      value: `${patient.compliance}%`,
+      value: `${user?.compliance || 92}%`,
       icon: "check-circle",
       colors: ["#28AFB0", "#28AFB0"],
     },
@@ -74,12 +96,15 @@ export default function PatientDashboard() {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
+
+      {/* ✅ Header updated with all user fields */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.name}>{patient.name}</Text>
-            <Text style={styles.id}>Patient ID: {patient.id}</Text>
+            <Text style={styles.name}>{user?.name || "Loading..."}</Text>
+            <Text style={styles.id}>Email: {user?.email || "N/A"}</Text>
+            <Text style={styles.id}>Age: {user?.age || "N/A"}</Text>
+            <Text style={styles.id}>Role: {user?.role || "N/A"}</Text>
           </View>
         </View>
       </View>
@@ -91,7 +116,7 @@ export default function PatientDashboard() {
             key={index}
             style={[
               styles.statCard,
-              { backgroundColor: stat.colors[1] + "20" }, // translucent
+              { backgroundColor: stat.colors[1] + "20" },
             ]}
           >
             <View
@@ -114,7 +139,7 @@ export default function PatientDashboard() {
         ))}
       </View>
 
-      {/* Filters + Category */}
+      {/* Filters */}
       <View style={styles.filterRow}>
         {["Daily", "Weekly", "Monthly"].map((item) => (
           <TouchableOpacity
@@ -136,13 +161,13 @@ export default function PatientDashboard() {
           </TouchableOpacity>
         ))}
 
-        {/* Custom Category Dropdown */}
         <TouchableOpacity
           style={styles.dropdownBtn}
           onPress={() => setDropdownOpen(true)}
         >
           <Text style={styles.dropdownText}>{category}</Text>
         </TouchableOpacity>
+
         <Modal transparent visible={dropdownOpen} animationType="fade">
           <TouchableOpacity
             style={styles.modalOverlay}
@@ -169,7 +194,7 @@ export default function PatientDashboard() {
         </Modal>
       </View>
 
-      {/* Recovery Progress Graph */}
+      {/* Chart */}
       <Text style={styles.sectionTitle}>Recovery Progress</Text>
       <BarChart
         data={{
@@ -190,10 +215,10 @@ export default function PatientDashboard() {
         style={styles.chart}
       />
 
-      {/* Overall Recovery Progress */}
+      {/* Overall Progress */}
       <Text style={styles.sectionTitle}>Overall Recovery</Text>
       <Progress.Bar
-        progress={patient.recovery / 100}
+        progress={(user?.recovery || 78) / 100}
         width={screenWidth}
         height={15}
         borderRadius={10}
@@ -222,7 +247,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   name: { color: "#FFFDFD", fontSize: 24, fontWeight: "700" },
-  id: { color: "#FFFDFD", marginTop: 6, fontSize: 14, fontWeight: "500" },
+  id: { color: "#FFFDFD", fontSize: 14, fontWeight: "500", marginTop: 4 },
 
   statsContainer: {
     flexDirection: "row",
