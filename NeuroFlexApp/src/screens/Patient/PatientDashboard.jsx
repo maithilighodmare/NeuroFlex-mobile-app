@@ -14,15 +14,70 @@ import { BarChart } from "react-native-chart-kit";
 import * as Progress from "react-native-progress";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
+//////////////// ✅ FIREBASE COMPAT IMPORTS (Works in React Native) ////////////////
+import firebase from "firebase/compat/app";
+import "firebase/compat/database";
+///////////////////////////////////////////////////////////////////////////////////
+
 const screenWidth = Dimensions.get("window").width - 40;
 
 export default function PatientDashboard() {
   const [user, setUser] = useState(null);
-  const [filter, setFilter] = useState("Weekly");
-  const [category, setCategory] = useState("Overall");
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // ✅ Load updated user from AsyncStorage (same as profile)
+  // ✅ Firebase Reaction Data (Chart)
+  const [reactionLabels, setReactionLabels] = useState([]);
+  const [reactionValues, setReactionValues] = useState([]);
+
+  ////////////////////// ✅ FIREBASE CONFIG ////////////////////////
+  const firebaseConfig = {
+    apiKey: "AIzaSyBk5t9Qd9aXehaZzPXZYSORZI-MmndEZhU",
+    authDomain: "NeuroFlexMat.firebaseapp.com",
+    databaseURL:
+      "https://neuroflexmat-237e7-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    projectId: "neuroflexmat-237e7",
+    storageBucket: "neuroflexmat-237e7.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID",
+  };
+
+  // ✅ Initialize Firebase App only once
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const db = firebase.database();
+  /////////////////////////////////////////////////////////////////
+
+  // ✅ Fetch Reaction Logs from Firebase
+  const fetchReactionLogs = async () => {
+    try {
+      const snapshot = await db.ref("reactionLogs/node1").once("value");
+
+      if (snapshot.exists()) {
+        const rawData = snapshot.val();
+
+        // Convert object into array
+        const entries = Object.keys(rawData).map((key) => ({
+          reaction: rawData[key].reaction_time_ms,
+          timestamp: rawData[key].timestamp,
+        }));
+
+        // ✅ Chart Data
+        const labels = entries.map((e) => String(e.reaction)); // show ms on X-axis
+        const values = entries.map((e) => Number(e.reaction)); // values in ms
+
+        setReactionLabels(labels);
+        setReactionValues(values);
+
+        console.log("✅ Firebase Reaction Data:", entries);
+      }
+    } catch (error) {
+      console.log("🔥 Firebase Fetch Error:", error);
+    }
+  };
+
+  // ✅ Load saved user
   const loadUser = async () => {
     try {
       const data = await AsyncStorage.getItem("data");
@@ -30,49 +85,26 @@ export default function PatientDashboard() {
         const parsed = JSON.parse(data);
 
         setUser({
-          name: parsed.name || "",
-          email: parsed.email || "",
-          age: parsed.age || "",
-          role: parsed.role || "",
+          name: parsed.name,
+          email: parsed.email,
+          age: parsed.age,
+          role: parsed.role,
           recovery: parsed.recovery || 78,
           sessions: parsed.sessions || 24,
           compliance: parsed.compliance || 92,
         });
       }
     } catch (error) {
-      console.log("Dashboard load error:", error);
+      console.log("User load error:", error);
     }
   };
 
   useEffect(() => {
     loadUser();
+    fetchReactionLogs();
   }, []);
 
-  // ✅ Default chart data
-  const chartData = {
-    Daily: {
-      Hand: [320, 310, 305, 300, 295, 290, 285],
-      Leg: [450, 440, 430, 420, 410, 400, 390],
-      Overall: [385, 375, 370, 360, 350, 345, 340],
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    },
-    Weekly: {
-      Hand: [310, 300, 290, 280],
-      Leg: [440, 420, 400, 380],
-      Overall: [375, 360, 345, 330],
-      labels: ["W1", "W2", "W3", "W4"],
-    },
-    Monthly: {
-      Hand: [300, 290, 280, 270],
-      Leg: [420, 410, 390, 370],
-      Overall: [365, 350, 335, 320],
-      labels: ["Jan", "Feb", "Mar", "Apr"],
-    },
-  };
-
-  const categories = ["Overall", "Hand", "Leg"];
-
-  // ✅ Stats (now fully synced from updated AsyncStorage)
+  // ✅ User Stats Section
   const stats = [
     {
       label: "Recovery",
@@ -96,8 +128,7 @@ export default function PatientDashboard() {
 
   return (
     <ScrollView style={styles.container}>
-
-      {/* ✅ Header updated with all user fields */}
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View>
@@ -109,7 +140,7 @@ export default function PatientDashboard() {
         </View>
       </View>
 
-      {/* Stats Section */}
+      {/* Stats */}
       <View style={styles.statsContainer}>
         {stats.map((stat, index) => (
           <View
@@ -131,6 +162,7 @@ export default function PatientDashboard() {
                 color={stat.colors[1]}
               />
             </View>
+
             <Text style={[styles.statValue, { color: stat.colors[1] }]}>
               {stat.value}
             </Text>
@@ -139,84 +171,44 @@ export default function PatientDashboard() {
         ))}
       </View>
 
-      {/* Filters */}
-      <View style={styles.filterRow}>
-        {["Daily", "Weekly", "Monthly"].map((item) => (
-          <TouchableOpacity
-            key={item}
-            onPress={() => setFilter(item)}
-            style={[
-              styles.filterBtn,
-              filter === item && styles.filterBtnActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                filter === item && styles.filterTextActive,
-              ]}
-            >
-              {item}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* ✅ Firebase Reaction Chart */}
+      <Text style={styles.sectionTitle}>Reaction Time (ms)</Text>
 
-        <TouchableOpacity
-          style={styles.dropdownBtn}
-          onPress={() => setDropdownOpen(true)}
+      {reactionValues.length > 0 ? (
+        <BarChart
+          data={{
+            labels: reactionLabels,
+            datasets: [{ data: reactionValues }],
+          }}
+          width={screenWidth}
+          height={240}
+          yAxisSuffix="ms"
+          chartConfig={{
+            backgroundGradientFrom: "#FFFDFD",
+            backgroundGradientTo: "#FFFDFD",
+            decimalPlaces: 0,
+            color: (opacity = 1) => `rgba(40, 175, 176, ${opacity})`,
+            labelColor: (opacity = 1) => `rgba(41, 49, 50, ${opacity})`,
+            barPercentage: 0.5,
+          }}
+          style={styles.chart}
+        />
+      ) : (
+        <Text
+          style={{
+            textAlign: "center",
+            marginTop: 20,
+            fontSize: 14,
+            color: "#293132",
+          }}
         >
-          <Text style={styles.dropdownText}>{category}</Text>
-        </TouchableOpacity>
-
-        <Modal transparent visible={dropdownOpen} animationType="fade">
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            onPress={() => setDropdownOpen(false)}
-          >
-            <View style={styles.modalContent}>
-              <FlatList
-                data={categories}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.modalItem}
-                    onPress={() => {
-                      setCategory(item);
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    <Text style={styles.modalText}>{item}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
-      </View>
-
-      {/* Chart */}
-      <Text style={styles.sectionTitle}>Recovery Progress</Text>
-      <BarChart
-        data={{
-          labels: chartData[filter].labels,
-          datasets: [{ data: chartData[filter][category] }],
-        }}
-        width={screenWidth}
-        height={220}
-        yAxisSuffix="ms"
-        chartConfig={{
-          backgroundGradientFrom: "#FFFDFD",
-          backgroundGradientTo: "#FFFDFD",
-          decimalPlaces: 0,
-          color: (opacity = 1) => `rgba(40, 175, 176, ${opacity})`,
-          labelColor: (opacity = 1) => `rgba(41, 49, 50, ${opacity})`,
-          barPercentage: 0.6,
-        }}
-        style={styles.chart}
-      />
+          Loading Firebase Data...
+        </Text>
+      )}
 
       {/* Overall Progress */}
       <Text style={styles.sectionTitle}>Overall Recovery</Text>
+
       <Progress.Bar
         progress={(user?.recovery || 78) / 100}
         width={screenWidth}
@@ -231,6 +223,7 @@ export default function PatientDashboard() {
   );
 }
 
+//////////////////////// ✅ STYLES (unchanged) ////////////////////////
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#FFFDFD" },
 
@@ -242,10 +235,8 @@ const styles = StyleSheet.create({
     marginTop: 40,
     elevation: 3,
   },
-  headerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  headerContent: { flexDirection: "row", alignItems: "center" },
+
   name: { color: "#FFFDFD", fontSize: 24, fontWeight: "700" },
   id: { color: "#FFFDFD", fontSize: 14, fontWeight: "500", marginTop: 4 },
 
@@ -254,6 +245,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 25,
   },
+
   statCard: {
     flex: 1,
     borderRadius: 16,
@@ -266,21 +258,15 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
+
   iconContainer: {
     padding: 10,
     borderRadius: 50,
     marginBottom: 10,
   },
-  statValue: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 13,
-    color: "#293132",
-    fontWeight: "500",
-  },
+
+  statValue: { fontSize: 22, fontWeight: "700", marginBottom: 4 },
+  statLabel: { fontSize: 13, color: "#293132", fontWeight: "500" },
 
   sectionTitle: {
     fontSize: 17,
@@ -288,52 +274,10 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     color: "#293132",
   },
-  chart: { marginVertical: 8, borderRadius: 16, elevation: 2 },
 
-  filterRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    flexWrap: "wrap",
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16,
+    elevation: 2,
   },
-  filterBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    marginRight: 10,
-  },
-  filterBtnActive: {
-    backgroundColor: "#28AFB0",
-    borderColor: "#28AFB0",
-  },
-  filterText: { color: "#293132", fontSize: 14 },
-  filterTextActive: { color: "#FFFDFD", fontWeight: "bold" },
-
-  dropdownBtn: {
-    backgroundColor: "#FFFDFD",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    marginLeft: "auto",
-  },
-  dropdownText: { fontSize: 14, fontWeight: "bold", color: "#293132" },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    backgroundColor: "#FFFDFD",
-    borderRadius: 12,
-    width: 200,
-    paddingVertical: 10,
-  },
-  modalItem: { paddingVertical: 10, paddingHorizontal: 20 },
-  modalText: { fontSize: 14, color: "#293132" },
 });
