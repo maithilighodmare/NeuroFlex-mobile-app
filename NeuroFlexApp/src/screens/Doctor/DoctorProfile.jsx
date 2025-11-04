@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Modal,
-  TextInput,
   ActivityIndicator,
   Alert,
 } from "react-native";
@@ -18,10 +17,11 @@ import axios from "axios";
 
 export default function PatientProfile({ navigation }) {
   const [patient, setPatient] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [saving, setSaving] = useState(false);
 
-  // ✅ Load user from AsyncStorage
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // ✅ Load user
   const loadUser = async () => {
     try {
       const data = await AsyncStorage.getItem("data");
@@ -43,49 +43,25 @@ export default function PatientProfile({ navigation }) {
     loadUser();
   }, []);
 
-  // ✅ Save updated data to backend + AsyncStorage
-  const handleSave = async () => {
+  // ✅ DELETE ACCOUNT
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
     try {
-      setSaving(true);
-
-      const stored = await AsyncStorage.getItem("data");
-      const parsed = JSON.parse(stored);
-
-      // ✅ HIT BACKEND UPDATE API
-      const res = await axios.put(
-        "https://neuro-flex-mat-backend.vercel.app/user/update",
-        {
-          name: patient.name,
-          age: patient.age,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${parsed.token}`,
-          },
-        }
+      await axios.post(
+        "https://neuro-flex-mat-backend-hmxu.vercel.app/doctor/delete",
+        { email: patient.email }
       );
 
-      // ✅ NEW UPDATED USER
-      const updatedUser = {
-        ...parsed,
-        name: res.data.user.name,
-        age: res.data.user.age,
-      };
+      await AsyncStorage.removeItem("data");
+      setDeleting(false);
+      setDeleteModal(false);
 
-      // ✅ Save updated data to AsyncStorage
-      await AsyncStorage.setItem("data", JSON.stringify(updatedUser));
-
-      // ✅ Update UI
-      setPatient(updatedUser);
-
-      setSaving(false);
-      setModalVisible(false);
-
-      Alert.alert("Updated ✅", "Profile updated successfully.");
+      Alert.alert("Deleted ✅", "Your doctor account has been removed.");
+      navigation.replace("Login");
     } catch (error) {
-      setSaving(false);
-      console.log("Update error:", error);
-      Alert.alert("Error", "Could not update profile.");
+      setDeleting(false);
+      console.log("Delete Error:", error.response?.data || error.message);
+      Alert.alert("Error", "Could not delete account.");
     }
   };
 
@@ -100,35 +76,57 @@ export default function PatientProfile({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Profile Header */}
+
+        {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.imageContainer}>
             <Image source={{ uri: patient.image }} style={styles.avatar} />
-            <TouchableOpacity style={styles.editIcon}>
-              <Icon name="camera" size={16} color="#fff" />
-            </TouchableOpacity>
           </View>
+
           <Text style={styles.name}>{patient.name}</Text>
           <Text style={styles.role}>{patient.role}</Text>
         </View>
 
-        {/* Menu List */}
+        {/* ✅ Now we only display user info — NO EDIT */}
         <View style={styles.menuContainer}>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => setModalVisible(true)}
-          >
+          <View style={styles.menuItem}>
             <View style={styles.menuLeft}>
               <View style={styles.iconWrapper}>
                 <Icon name="user" size={20} color="#fff" />
               </View>
-              <Text style={styles.menuText}>Edit Profile</Text>
+              <Text style={styles.menuText}>Name: {patient.name}</Text>
             </View>
-            <Icon name="chevron-right" size={22} color="#999" />
-          </TouchableOpacity>
+          </View>
+
+          <View style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <View style={styles.iconWrapper}>
+                <Icon name="calendar" size={20} color="#fff" />
+              </View>
+              <Text style={styles.menuText}>Age: {patient.age}</Text>
+            </View>
+          </View>
+
+          <View style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <View style={styles.iconWrapper}>
+                <Icon name="mail" size={20} color="#fff" />
+              </View>
+              <Text style={styles.menuText}>Email: {patient.email}</Text>
+            </View>
+          </View>
         </View>
 
-        {/* Sign Out */}
+        {/* ✅ Delete Account */}
+        <TouchableOpacity
+          style={[styles.signOutButton, { backgroundColor: "red", marginTop: 15 }]}
+          onPress={() => setDeleteModal(true)}
+        >
+          <Icon name="trash" size={18} color="#fff" />
+          <Text style={styles.signOutText}>Delete Account</Text>
+        </TouchableOpacity>
+
+        {/* ✅ Sign Out */}
         <TouchableOpacity
           style={styles.signOutButton}
           onPress={async () => {
@@ -140,38 +138,31 @@ export default function PatientProfile({ navigation }) {
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
 
-        {/* Edit Modal */}
-        <Modal animationType="slide" transparent visible={modalVisible}>
+        {/* ✅ Delete Confirm Modal */}
+        <Modal transparent visible={deleteModal} animationType="fade">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Delete Account?</Text>
+              <Text style={{ textAlign: "center", marginBottom: 20 }}>
+                This action cannot be undone.
+              </Text>
+
               <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                style={styles.backButton}
+                style={[styles.saveButton, { backgroundColor: "red" }]}
+                onPress={handleDeleteAccount}
               >
-                <Icon name="chevron-left" size={28} color="#28AFB0" />
-              </TouchableOpacity>
-
-              <Text style={styles.modalTitle}>Edit Profile</Text>
-
-              <TextInput
-                style={styles.input}
-                value={patient.name}
-                onChangeText={(t) => setPatient({ ...patient, name: t })}
-              />
-
-              <TextInput
-                style={styles.input}
-                value={String(patient.age)}
-                onChangeText={(t) => setPatient({ ...patient, age: t })}
-                keyboardType="numeric"
-              />
-
-              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                {saving ? (
+                {deleting ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.saveText}>Save</Text>
+                  <Text style={styles.saveText}>Yes, Delete</Text>
                 )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.saveButton, { marginTop: 10, backgroundColor: "#28AFB0" }]}
+                onPress={() => setDeleteModal(false)}
+              >
+                <Text style={styles.saveText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -182,53 +173,16 @@ export default function PatientProfile({ navigation }) {
 }
 
 //
-// ✅ ALL YOUR STYLES — NO CHANGE
+// ✅ STYLES — UNCHANGED
 //
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#F5F6FA",
-    marginTop: 5,
-  },
-  scrollContent: {
-    alignItems: "center",
-    paddingVertical: 30,
-  },
-  headerContainer: {
-    alignItems: "center",
-    marginBottom: 25,
-    marginTop: 80,
-  },
-  imageContainer: {
-    position: "relative",
-  },
-  avatar: {
-    width: 210,
-    height: 210,
-    borderRadius: 55,
-  },
-  editIcon: {
-    position: "absolute",
-    bottom: 5,
-    right: 5,
-    backgroundColor: "#28AFB0",
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  name: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginTop: 12,
-    color: "#000",
-  },
-  role: {
-    fontSize: 14,
-    color: "#777",
-    marginTop: 4,
-  },
+  safeArea: { flex: 1, backgroundColor: "#F5F6FA", marginTop: 5 },
+  scrollContent: { alignItems: "center", paddingVertical: 30 },
+  headerContainer: { alignItems: "center", marginBottom: 25, marginTop: 80 },
+  imageContainer: { position: "relative" },
+  avatar: { width: 210, height: 210, borderRadius: 55 },
+  name: { fontSize: 20, fontWeight: "bold", marginTop: 12, color: "#000" },
+  role: { fontSize: 14, color: "#777", marginTop: 4 },
   menuContainer: {
     width: "90%",
     backgroundColor: "#fff",
@@ -247,10 +201,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#eee",
   },
-  menuLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  menuLeft: { flexDirection: "row", alignItems: "center" },
   iconWrapper: {
     backgroundColor: "#28AFB0",
     borderRadius: 25,
@@ -260,10 +211,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 15,
   },
-  menuText: {
-    fontSize: 16,
-    color: "#333",
-  },
+  menuText: { fontSize: 16, color: "#333" },
   signOutButton: {
     flexDirection: "row",
     backgroundColor: "#28AFB0",
@@ -275,11 +223,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
     gap: 8,
   },
-  signOutText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
+  signOutText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -298,18 +242,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
-  backButton: {
-    position: "absolute",
-    left: 10,
-    top: 15,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-  },
   saveButton: {
     backgroundColor: "#28AFB0",
     borderRadius: 10,
@@ -317,8 +249,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 15,
   },
-  saveText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
+  saveText: { color: "#fff", fontWeight: "bold" },
 });

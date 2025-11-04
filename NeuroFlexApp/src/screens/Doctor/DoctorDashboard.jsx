@@ -47,7 +47,7 @@ export default function DoctorDashboard() {
       setFetchLoading(true);
 
       const res = await axios.get(
-        "https://neuro-flex-mat-backend.vercel.app/doctor/userlist"
+        "https://neuro-flex-mat-backend-hmxu.vercel.app/doctor/userlist"
       );
 
       setUsers(res.data.users);

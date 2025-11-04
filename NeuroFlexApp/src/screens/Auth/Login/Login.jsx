@@ -32,7 +32,7 @@ export default function Login({ navigation }) {
       const apiRole = role === "Patient" ? "user" : "doctor";
 
       const res = await axios.post(
-        `https://neuro-flex-mat-backend.vercel.app/${apiRole}/login`,
+        `https://neuro-flex-mat-backend-hmxu.vercel.app/${apiRole}/login`,
         { email, password }
       );
 

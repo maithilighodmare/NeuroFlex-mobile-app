@@ -20,10 +20,12 @@ import axios from "axios";
 export default function PatientProfile({ navigation }) {
   const [patient, setPatient] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false); // ✅ NEW
   const [isEnabled, setIsEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [signingOut, setSigningOut] = useState(false); // ✅ Added logout loading
+  const [signingOut, setSigningOut] = useState(false);
+  const [deleting, setDeleting] = useState(false); // ✅ NEW
 
   const toggleSwitch = () => setIsEnabled((prev) => !prev);
 
@@ -67,7 +69,7 @@ export default function PatientProfile({ navigation }) {
       const parsed = JSON.parse(stored);
 
       const res = await axios.put(
-        "https://neuro-flex-mat-backend.vercel.app/user/update",
+        "https://neuro-flex-mat-backend-hmxu.vercel.app/user/update",
         {
           name: patient.name,
           age: patient.age,
@@ -103,7 +105,7 @@ export default function PatientProfile({ navigation }) {
     Alert.alert("Refreshed ✅", "User data updated.");
   };
 
-  // ✅ SIGN OUT (with loading)
+  // ✅ SIGN OUT
   const handleSignOut = async () => {
     setSigningOut(true);
 
@@ -122,6 +124,39 @@ export default function PatientProfile({ navigation }) {
     }
   };
 
+  // ✅ DELETE ACCOUNT API
+const handleDeleteAccount = async () => {
+  setDeleting(true);
+
+  try {
+    const stored = await AsyncStorage.getItem("data");
+    const parsed = JSON.parse(stored);
+
+    await axios.delete(
+      "https://neuro-flex-mat-backend-hmxu.vercel.app/user/delete",
+      {
+        headers: {
+          Authorization: `Bearer ${parsed.token}`,  // ✅ FIXED
+        },
+        data: { email: patient.email },
+      }
+    );
+
+    await AsyncStorage.removeItem("data");
+
+    setDeleting(false);
+    setDeleteModalVisible(false);
+
+    Alert.alert("Deleted ✅", "Your account has been permanently deleted.");
+    navigation.replace("Login");
+  } catch (error) {
+    setDeleting(false);
+    console.log("❌ Delete error:", error.response?.data || error.message);
+    Alert.alert("Error", "Could not delete. Try again.");
+  }
+};
+
+
   if (loading || !patient) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -133,8 +168,6 @@ export default function PatientProfile({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
-        {/* ✅ Refresh Button */}
         <TouchableOpacity
           onPress={handleRefresh}
           style={{ marginTop: 30, marginBottom: -50 }}
@@ -174,6 +207,7 @@ export default function PatientProfile({ navigation }) {
             <Icon name="chevron-right" size={22} color="#999" />
           </TouchableOpacity>
 
+          {/* NOTIFICATION */}
           <TouchableOpacity style={styles.menuItem} activeOpacity={1}>
             <View style={styles.menuLeft}>
               <View style={styles.iconWrapper}>
@@ -208,6 +242,22 @@ export default function PatientProfile({ navigation }) {
             </View>
             <Icon name="chevron-right" size={22} color="#999" />
           </TouchableOpacity>
+
+          {/* ✅ DELETE ACCOUNT BUTTON */}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => setDeleteModalVisible(true)}
+          >
+            <View style={styles.menuLeft}>
+              <View style={[styles.iconWrapper, { backgroundColor: "#ff4444" }]}>
+                <Icon name="trash" size={20} color="#fff" />
+              </View>
+              <Text style={[styles.menuText, { color: "#ff4444" }]}>
+                Delete Account
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={22} color="#ff4444" />
+          </TouchableOpacity>
         </View>
 
         {/* ✅ Sign Out */}
@@ -226,7 +276,7 @@ export default function PatientProfile({ navigation }) {
           )}
         </TouchableOpacity>
 
-        {/* Edit Modal */}
+        {/* ✅ EDIT PROFILE MODAL (UNCHANGED) */}
         <Modal animationType="slide" transparent visible={modalVisible}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -259,14 +309,60 @@ export default function PatientProfile({ navigation }) {
           </View>
         </Modal>
 
+        {/* ✅ DELETE CONFIRMATION MODAL */}
+        <Modal animationType="fade" transparent visible={deleteModalVisible}>
+          <View style={styles.modalOverlay}>
+            <View
+              style={[
+                styles.modalContent,
+                { paddingTop: 40, paddingBottom: 30 },
+              ]}
+            >
+              <Text
+                style={{
+                  fontSize: 17,
+                  color: "#333",
+                  textAlign: "center",
+                  marginBottom: 20,
+                }}
+              >
+                Are you sure you want to delete your account?
+              </Text>
+
+              {deleting ? (
+                <ActivityIndicator size="large" color="#ff4444" />
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={[
+                      styles.saveButton,
+                      { backgroundColor: "#ff4444", marginBottom: 10 },
+                    ]}
+                    onPress={handleDeleteAccount}
+                  >
+                    <Text style={styles.saveText}>Delete</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.saveButton,
+                      { backgroundColor: "#28AFB0" },
+                    ]}
+                    onPress={() => setDeleteModalVisible(false)}
+                  >
+                    <Text style={styles.saveText}>Cancel</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-//
-// ✅ ORIGINAL STYLES — UNCHANGED
-//
+// ✅ NO STYLE MODIFIED BELOW
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
