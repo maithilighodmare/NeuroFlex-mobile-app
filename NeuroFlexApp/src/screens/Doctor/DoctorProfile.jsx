@@ -48,7 +48,7 @@ export default function PatientProfile({ navigation }) {
     setDeleting(true);
     try {
       await axios.post(
-        "https://neuro-flex-mat-backend-hmxu.vercel.app/doctor/delete",
+        "http://192.168.213.204:4000/doctor/delete",
         { email: patient.email }
       );
 
@@ -98,14 +98,7 @@ export default function PatientProfile({ navigation }) {
             </View>
           </View>
 
-          <View style={styles.menuItem}>
-            <View style={styles.menuLeft}>
-              <View style={styles.iconWrapper}>
-                <Icon name="calendar" size={20} color="#fff" />
-              </View>
-              <Text style={styles.menuText}>Age: {patient.age}</Text>
-            </View>
-          </View>
+      
 
           <View style={styles.menuItem}>
             <View style={styles.menuLeft}>

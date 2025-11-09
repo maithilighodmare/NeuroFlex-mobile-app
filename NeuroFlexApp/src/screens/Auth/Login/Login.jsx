@@ -20,7 +20,6 @@ export default function Login({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-
   const [showPassword, setShowPassword] = useState(false); // ✅ NEW TOGGLE
 
   const handleLogin = async () => {
@@ -32,14 +31,14 @@ export default function Login({ navigation }) {
       const apiRole = role === "Patient" ? "user" : "doctor";
 
       const res = await axios.post(
-        `https://neuro-flex-mat-backend-hmxu.vercel.app/${apiRole}/login`,
+       `http://192.168.213.204:4000/${apiRole}/login`,
         { email, password }
       );
 
       const userObj = apiRole === "user" ? res.data.user : res.data.doctor;
 
       const userData = {
-        _id: userObj._id,
+        _id: userObj._id || userObj.id, // ✅ supports both user & doctor
         name: userObj.name,
         email: userObj.email,
         age: userObj.age,
@@ -52,6 +51,8 @@ export default function Login({ navigation }) {
 
       navigation.replace(role === "Doctor" ? "Doctor" : "Patient");
     } catch (err) {
+      console.log("LOGIN ERROR:", err.response?.data || err.message);
+
       Alert.alert("Login Failed", err.response?.data?.message || "Try again");
     }
 

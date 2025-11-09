@@ -6,28 +6,25 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
-  Modal,
-  FlatList,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BarChart } from "react-native-chart-kit";
 import * as Progress from "react-native-progress";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-
-//////////////// ✅ FIREBASE COMPAT IMPORTS (Works in React Native) ////////////////
 import firebase from "firebase/compat/app";
 import "firebase/compat/database";
-///////////////////////////////////////////////////////////////////////////////////
+import axios from "axios";
 
 const screenWidth = Dimensions.get("window").width - 40;
 
 export default function PatientDashboard() {
   const [user, setUser] = useState(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // ✅ Firebase Reaction Data (Chart)
-  const [reactionLabels, setReactionLabels] = useState([]);
-  const [reactionValues, setReactionValues] = useState([]);
+  const [firebaseMean, setFirebaseMean] = useState(0);
+  const [dataArr, setDataArr] = useState([]);
+  const [averageValue, setAverageValue] = useState(0);
+
+  const [isRunning, setIsRunning] = useState(false);
+  const [seconds, setSeconds] = useState(0);
 
   ////////////////////// ✅ FIREBASE CONFIG ////////////////////////
   const firebaseConfig = {
@@ -41,90 +38,132 @@ export default function PatientDashboard() {
     appId: "YOUR_APP_ID",
   };
 
-  // ✅ Initialize Firebase App only once
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
   const db = firebase.database();
-  /////////////////////////////////////////////////////////////////
 
-  // ✅ Fetch Reaction Logs from Firebase
-  const fetchReactionLogs = async () => {
+  // ✅ Compute mean from 5 Firebase nodes
+  const computeMeanFromAllNodes = async () => {
     try {
-      const snapshot = await db.ref("reactionLogs/node1").once("value");
+      const snaps = await Promise.all([
+        db.ref("reactionLogs/node1").once("value"),
+        db.ref("reactionLogs/node2").once("value"),
+        db.ref("reactionLogs/node3").once("value"),
+        db.ref("reactionLogs/node4").once("value"),
+        db.ref("reactionLogs/node5").once("value"),
+      ]);
 
-      if (snapshot.exists()) {
-        const rawData = snapshot.val();
+      const allValues = [];
 
-        // Convert object into array
-        const entries = Object.keys(rawData).map((key) => ({
-          reaction: rawData[key].reaction_time_ms,
-          timestamp: rawData[key].timestamp,
-        }));
+      snaps.forEach((snapshot) => {
+        if (snapshot.exists()) {
+          const raw = snapshot.val();
+          Object.keys(raw).forEach((key) => {
+            const v = raw[key]?.reaction_time_ms;
+            if (v !== undefined && !isNaN(Number(v))) {
+              allValues.push(Number(v) / 1000); // convert ms → seconds
+            }
+          });
+        }
+      });
 
-        // ✅ Chart Data
-        const labels = entries.map((e) => String(e.reaction)); // show ms on X-axis
-        const values = entries.map((e) => Number(e.reaction)); // values in ms
+      const mean =
+        allValues.length > 0
+          ? allValues.reduce((sum, x) => sum + x, 0) / allValues.length
+          : 0;
 
-        setReactionLabels(labels);
-        setReactionValues(values);
-
-        console.log("✅ Firebase Reaction Data:", entries);
-      }
-    } catch (error) {
-      console.log("🔥 Firebase Fetch Error:", error);
+      setFirebaseMean(Number(mean.toFixed(3)));
+      return Number(mean.toFixed(3));
+    } catch (err) {
+      console.log("Error computing Firebase mean:", err);
+      return 0;
     }
   };
 
-  // ✅ Load saved user
+  // ✅ Load user + sessions
   const loadUser = async () => {
     try {
       const data = await AsyncStorage.getItem("data");
       if (data) {
         const parsed = JSON.parse(data);
+        setUser(parsed);
 
-        setUser({
-          name: parsed.name,
+        const res = await axios.post("http://192.168.213.204:4000/user/data", {
           email: parsed.email,
-          age: parsed.age,
-          role: parsed.role,
-          recovery: parsed.recovery || 78,
-          sessions: parsed.sessions || 24,
-          compliance: parsed.compliance || 92,
         });
+
+        // ✅ convert ms → seconds
+        const valuesInSeconds = (res.data.dataArr || []).map((v) =>
+          Number((v / 1000).toFixed(3))
+        );
+
+        setDataArr(valuesInSeconds);
+
+        if (valuesInSeconds.length > 0) {
+          const avg =
+            valuesInSeconds.reduce((s, x) => s + x, 0) / valuesInSeconds.length;
+
+          setAverageValue(Number(avg.toFixed(3)));
+        } else {
+          setAverageValue(0);
+        }
       }
-    } catch (error) {
-      console.log("User load error:", error);
+    } catch (err) {
+      console.log("User load error:", err);
     }
   };
 
   useEffect(() => {
     loadUser();
-    fetchReactionLogs();
+    computeMeanFromAllNodes();
   }, []);
 
-  // ✅ User Stats Section
-  const stats = [
-    {
-      label: "Recovery",
-      value: `${user?.recovery || 78}%`,
-      icon: "heart-pulse",
-      colors: ["#28AFB0", "#28AFB0"],
-    },
-    {
-      label: "Sessions",
-      value: user?.sessions || 24,
-      icon: "calendar-check",
-      colors: ["#28AFB0", "#28AFB0"],
-    },
-    {
-      label: "Compliance",
-      value: `${user?.compliance || 92}%`,
-      icon: "check-circle",
-      colors: ["#28AFB0", "#28AFB0"],
-    },
-  ];
+  // ✅ Timer
+  useEffect(() => {
+    let interval;
+    if (isRunning) {
+      interval = setInterval(() => setSeconds((s) => s + 1), 1000);
+    } else clearInterval(interval);
+
+    return () => clearInterval(interval);
+  }, [isRunning]);
+
+  const startExercise = () => {
+    setSeconds(0);
+    setIsRunning(true);
+  };
+
+  const stopExercise = async () => {
+    setIsRunning(false);
+
+    try {
+      const finalValue = await computeMeanFromAllNodes(); // seconds
+
+      const randomValueSec = Math.floor(Math.random() * 801 + 100) / 1000;
+
+      await axios.post("http://192.168.213.204:4000/user/addvalue", {
+        email: user.email,
+        value: finalValue, // convert sec→ms
+      });
+
+      await loadUser();
+    } catch (err) {
+      console.log("Error stopExercise:", err);
+    }
+  };
+
+  // ✅ Correct inverted recovery percent
+  const recoveryPercent = () => {
+    if (!dataArr.length) return 0;
+
+    const mean = dataArr.reduce((s, x) => s + x, 0) / dataArr.length; // seconds
+
+    // ✅ 0.5s → ~100%
+    // ✅ 6s → 0%
+    const percent = 100 - Math.min(100, Math.round((mean / 6) * 100));
+
+    return percent < 0 ? 0.0 : percent;
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -132,98 +171,115 @@ export default function PatientDashboard() {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.name}>{user?.name || "Loading..."}</Text>
-            <Text style={styles.id}>Email: {user?.email || "N/A"}</Text>
-            <Text style={styles.id}>Age: {user?.age || "N/A"}</Text>
-            <Text style={styles.id}>Role: {user?.role || "N/A"}</Text>
+            <Text style={styles.name}>{user?.name}</Text>
+            <Text style={styles.id}>Email: {user?.email}</Text>
+            <Text style={styles.id}>Age: {user?.age}</Text>
+            <Text style={styles.id}>Role: {user?.role}</Text>
           </View>
         </View>
       </View>
 
       {/* Stats */}
       <View style={styles.statsContainer}>
-        {stats.map((stat, index) => (
-          <View
-            key={index}
-            style={[
-              styles.statCard,
-              { backgroundColor: stat.colors[1] + "20" },
-            ]}
-          >
-            <View
-              style={[
-                styles.iconContainer,
-                { backgroundColor: stat.colors[0] + "33" },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name={stat.icon}
-                size={28}
-                color={stat.colors[1]}
-              />
-            </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{recoveryPercent()}%</Text>
+          <Text style={styles.statLabel}>Recovery</Text>
+        </View>
 
-            <Text style={[styles.statValue, { color: stat.colors[1] }]}>
-              {stat.value}
-            </Text>
-            <Text style={styles.statLabel}>{stat.label}</Text>
-          </View>
-        ))}
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{dataArr.length}</Text>
+          <Text style={styles.statLabel}>Sessions</Text>
+        </View>
+
+        {/* <View style={styles.statCard}>
+          <Text style={styles.statValue}>86%</Text>
+          <Text style={styles.statLabel}>Compliance</Text>
+        </View> */}
       </View>
 
-      {/* ✅ Firebase Reaction Chart */}
-      <Text style={styles.sectionTitle}>Reaction Time (ms)</Text>
-
-      {reactionValues.length > 0 ? (
-        <BarChart
-          data={{
-            labels: reactionLabels,
-            datasets: [{ data: reactionValues }],
-          }}
-          width={screenWidth}
-          height={240}
-          yAxisSuffix="ms"
-          chartConfig={{
-            backgroundGradientFrom: "#FFFDFD",
-            backgroundGradientTo: "#FFFDFD",
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(40, 175, 176, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(41, 49, 50, ${opacity})`,
-            barPercentage: 0.5,
-          }}
-          style={styles.chart}
-        />
-      ) : (
-        <Text
-          style={{
-            textAlign: "center",
-            marginTop: 20,
-            fontSize: 14,
-            color: "#293132",
-          }}
-        >
-          Loading Firebase Data...
-        </Text>
+      {/* Timer */}
+      {isRunning && (
+        <View style={styles.timerCard}>
+          <Text style={styles.timerText}>Timer: {seconds}s</Text>
+        </View>
       )}
 
-      {/* Overall Progress */}
-      <Text style={styles.sectionTitle}>Overall Recovery</Text>
+      {!isRunning ? (
+        <TouchableOpacity style={styles.startButton} onPress={startExercise}>
+          <Text style={styles.buttonText}>Start Exercise</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity style={styles.stopButton} onPress={stopExercise}>
+          <Text style={styles.buttonText}>End Exercise</Text>
+        </TouchableOpacity>
+      )}
 
+      {/* Average */}
+      <View style={styles.averageCard}>
+        <Text style={styles.averageLabel}>Average Session</Text>
+        <Text style={styles.averageValue}>{averageValue}s</Text>
+        <Text style={styles.averageRef}>(Reference: 6s)</Text>
+      </View>
+
+      {/* Chart */}
+      {/* -------- ✅ Session Performance Chart -------- */}
+      <Text style={styles.sectionTitle}>Session Performance Trend</Text>
+
+      {dataArr.length > 0 ? (
+        <View>
+          <Text style={styles.chartSubtitle}>
+            Each bar represents the reaction time (in seconds) for a session.
+            Lower values = Faster response = Better performance.
+          </Text>
+
+          <BarChart
+            data={{
+              labels: dataArr.map((_, i) => `S${i + 1}`),
+              datasets: [{ data: dataArr }],
+            }}
+            width={screenWidth}
+            height={260}
+            fromZero={true}
+            yAxisSuffix="s"
+            chartConfig={{
+              backgroundGradientFrom: "#FFFDFD",
+              backgroundGradientTo: "#FFFDFD",
+              decimalPlaces: 2,
+              color: (opacity) => `rgba(40,175,176,${opacity})`,
+              labelColor: (opacity) => `rgba(41,49,50,${opacity})`,
+              propsForBackgroundLines: {
+                stroke: "#E0E0E0",
+              },
+            }}
+            style={styles.chart}
+          />
+
+          <Text style={styles.chartNote}>
+            ✅ Tip: Aim for lower values over time to improve your recovery and
+            reaction speed.
+          </Text>
+        </View>
+      ) : (
+        <Text style={styles.noData}>No session data yet...</Text>
+      )}
+
+      {/* Recovery Progress */}
+      <Text style={styles.sectionTitle}>Overall Recovery</Text>
       <Progress.Bar
-        progress={(user?.recovery || 78) / 100}
+        progress={recoveryPercent() / 100}
         width={screenWidth}
         height={15}
-        borderRadius={10}
         color="#28AFB0"
-        unfilledColor="#E0E0E0"
         borderWidth={0}
-        style={{ marginBottom: 30 }}
+        borderRadius={10}
+        unfilledColor="#E0E0E0"
+        style={{ marginBottom: 25 }}
       />
     </ScrollView>
   );
 }
 
-//////////////////////// ✅ STYLES (unchanged) ////////////////////////
+//////////////////// STYLES ////////////////////
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#FFFDFD" },
 
@@ -233,51 +289,131 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
     marginTop: 40,
-    elevation: 3,
   },
   headerContent: { flexDirection: "row", alignItems: "center" },
-
   name: { color: "#FFFDFD", fontSize: 24, fontWeight: "700" },
-  id: { color: "#FFFDFD", fontSize: 14, fontWeight: "500", marginTop: 4 },
+  id: { color: "#FFFDFD", fontSize: 14, marginTop: 4 },
 
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 25,
+    marginBottom: 20,
   },
-
   statCard: {
     flex: 1,
+    backgroundColor: "#28AFB020",
+    marginHorizontal: 5,
+    paddingVertical: 20,
     borderRadius: 16,
     alignItems: "center",
-    paddingVertical: 20,
-    marginHorizontal: 5,
-    backgroundColor: "#FFFDFD",
-    shadowColor: "#000",
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    elevation: 4,
   },
-
-  iconContainer: {
-    padding: 10,
-    borderRadius: 50,
-    marginBottom: 10,
-  },
-
-  statValue: { fontSize: 22, fontWeight: "700", marginBottom: 4 },
-  statLabel: { fontSize: 13, color: "#293132", fontWeight: "500" },
+  statValue: { fontSize: 22, fontWeight: "700", color: "#28AFB0" },
+  statLabel: { fontSize: 13, color: "#293132" },
 
   sectionTitle: {
     fontSize: 17,
     fontWeight: "600",
-    marginVertical: 12,
+    marginVertical: 10,
     color: "#293132",
   },
 
   chart: {
     marginVertical: 8,
     borderRadius: 16,
-    elevation: 2,
   },
+
+  startButton: {
+    backgroundColor: "#28AFB0",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  stopButton: {
+    backgroundColor: "red",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+
+  averageCard: {
+    backgroundColor: "#28AFB020",
+    padding: 15,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  averageLabel: {
+    fontSize: 14,
+    color: "#293132",
+    marginBottom: 5,
+    fontWeight: "500",
+  },
+  averageValue: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#28AFB0",
+  },
+  averageRef: {
+    fontSize: 12,
+    color: "#555",
+    marginTop: 3,
+  },
+
+  startButton: {
+    backgroundColor: "#28AFB0",
+    paddingVertical: 15,
+    borderRadius: 10,
+    marginVertical: 10,
+  },
+  stopButton: {
+    backgroundColor: "#FF5C5C",
+    paddingVertical: 15,
+    borderRadius: 10,
+    marginVertical: 10,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+
+  timerCard: {
+    backgroundColor: "#28AFB020",
+    padding: 15,
+    borderRadius: 12,
+    marginVertical: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#28AFB0",
+  },
+  timerText: {
+    fontSize: 20,
+    color: "#28AFB0",
+    fontWeight: "600",
+  },
+
+  chartSubtitle: {
+  textAlign: "center",
+  color: "#555",
+  fontSize: 13,
+  marginBottom: 10,
+  paddingHorizontal: 10,
+},
+
+chartNote: {
+  textAlign: "center",
+  color: "#28AFB0",
+  fontSize: 13,
+  marginTop: 10,
+  fontWeight: "500",
+},
+
+noData: {
+  textAlign: "center",
+  marginTop: 20,
+  color: "#293132",
+  fontSize: 14,
+},
+
 });

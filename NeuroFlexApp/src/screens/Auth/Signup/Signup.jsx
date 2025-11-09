@@ -34,7 +34,7 @@ export default function Signup({ navigation }) {
       const apiRole = role === "Patient" ? "user" : "doctor";
 
       const res = await axios.post(
-        `https://neuro-flex-mat-backend-hmxu.vercel.app/${apiRole}/signup`,
+        `http://192.168.213.204:4000/${apiRole}/signup`,
         { name, email, password, age, role }
       );
 

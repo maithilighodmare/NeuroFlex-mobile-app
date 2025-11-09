@@ -133,7 +133,7 @@ const handleDeleteAccount = async () => {
     const parsed = JSON.parse(stored);
 
     await axios.delete(
-      "https://neuro-flex-mat-backend-hmxu.vercel.app/user/delete",
+      "http://192.168.213.204:4000/user/delete",
       {
         headers: {
           Authorization: `Bearer ${parsed.token}`,  // ✅ FIXED

@@ -24,9 +24,8 @@ export default function ChatBot() {
   const { width } = useWindowDimensions();
   const controllerRef = useRef(null);
 
-  // ✅ WORKING MODEL
+  // ✅ Gemini
   const API_KEY = "AIzaSyBPhI2LOjmQy819BP8xSplsoo1gFT8bCZY";
-
   const API_URL =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" +
     API_KEY;
@@ -42,23 +41,23 @@ export default function ChatBot() {
     return `<div style="color:#000;font-size:15px;line-height:20px;">${esc}</div>`;
   };
 
-  // ✅ REMOVE MARKDOWN STARS ONLY (kept simple as requested)
   const removeMarkdown = (text) => {
     return text
-      .replace(/\*\*/g, "") // remove bold **
-      .replace(/\*/g, "") // remove italic *
-      .replace(/`/g, "") // remove inline code `
-      .replace(/#+\s/g, "") // remove headings ###
-      .replace(/-\s/g, "") // remove bullet points -
-      .replace(/>\s/g, "") // remove blockquote >
+      .replace(/\*\*/g, "")
+      .replace(/\*/g, "")
+      .replace(/`/g, "")
+      .replace(/#+\s/g, "")
+      .replace(/-\s/g, "")
+      .replace(/>\s/g, "")
       .trim();
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || sending) return;
+  // ✅ SEND FAQ or User text
+  const sendMessage = async (preText) => {
+    const finalText = preText || input.trim();
+    if (!finalText || sending) return;
 
-    const userMsg = input.trim();
-    setMessages((prev) => [...prev, { sender: "user", text: userMsg }]);
+    setMessages((prev) => [...prev, { sender: "user", text: finalText }]);
     setInput("");
     setSending(true);
     setStreamingText("");
@@ -74,7 +73,7 @@ export default function ChatBot() {
           contents: [
             {
               role: "user",
-              parts: [{ text: userMsg }],
+              parts: [{ text: finalText + " Give short answer in 30 words" }],
             },
           ],
         }),
@@ -82,15 +81,12 @@ export default function ChatBot() {
 
       const data = await res.json();
 
-      console.log("✅ FIXED Gemini Response:", data);
-
       const rawBotText =
         data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No response";
 
-      // ✅ clean markdown
       const botText = removeMarkdown(rawBotText);
 
-      // ✅ Typing animation
+      // ✅ typing effect
       const words = botText.split(" ");
       let index = 0;
 
@@ -106,18 +102,10 @@ export default function ChatBot() {
         }
       }, 25);
     } catch (error) {
-      console.log("❌ Fetch error:", error);
-
       if (error.name === "AbortError") {
-        setMessages((prev) => [
-          ...prev,
-          { sender: "bot", text: "❌ Cancelled" },
-        ]);
+        setMessages((prev) => [...prev, { sender: "bot", text: "❌ Cancelled" }]);
       } else {
-        setMessages((prev) => [
-          ...prev,
-          { sender: "bot", text: "❌ API error" },
-        ]);
+        setMessages((prev) => [...prev, { sender: "bot", text: "❌ API error" }]);
       }
       setSending(false);
     }
@@ -128,6 +116,14 @@ export default function ChatBot() {
     setSending(false);
     setStreamingText("");
   };
+
+  // ✅ FAQ list
+  const faqs = [
+    "What are common symptoms of fever?",
+    "How can I boost my immunity naturally?",
+    "What is the best time to workout?",
+    "How many steps should I walk daily?",
+  ];
 
   return (
     <SafeAreaView style={styles.page}>
@@ -144,12 +140,27 @@ export default function ChatBot() {
         )}
       </View>
 
+      {/* ✅ FAQ BUTTONS */}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", padding: 10 }}>
+        {faqs.map((q, i) => (
+          <TouchableOpacity
+            key={i}
+            onPress={() => sendMessage(q)}
+            style={{
+              backgroundColor: "#E8E8E8",
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 20,
+              margin: 5,
+            }}
+          >
+            <Text style={{ color: "#000", fontSize: 13 }}>{q}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       {/* ✅ Chat Area */}
-      <ScrollView
-        ref={scrollRef}
-        style={styles.chatArea}
-        onContentSizeChange={scrollToBottom}
-      >
+      <ScrollView ref={scrollRef} style={styles.chatArea}>
         {messages.map((msg, i) => (
           <View
             key={i}
@@ -179,36 +190,37 @@ export default function ChatBot() {
         )}
       </ScrollView>
 
-      {/* ✅ Input */}
+      {/* ✅ Improved KeyboardAvoiding */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.inputArea}
+        behavior={Platform.OS === "ios" ? "padding" : "position"}
       >
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          placeholder="Type a message..."
-          placeholderTextColor="#777"
-          style={styles.input}
-        />
+        <View style={styles.inputArea}>
+          <TextInput
+            value={input}
+            onChangeText={setInput}
+            placeholder="Type a message..."
+            placeholderTextColor="#777"
+            style={styles.input}
+          />
 
-        <TouchableOpacity
-          onPress={sendMessage}
-          disabled={sending}
-          style={styles.sendBtn}
-        >
-          {sending ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={{ color: "#fff", fontSize: 20 }}>➤</Text>
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => sendMessage()}
+            disabled={sending}
+            style={styles.sendBtn}
+          >
+            {sending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={{ color: "#fff", fontSize: 20 }}>➤</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-// ✅ SAME UI (unchanged)
+// ✅ Same styles (unchanged)
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: "#ffffff" },
   header: {
